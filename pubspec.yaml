@@ -30,10 +30,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.5
+  intl: any
 
 dev_dependencies:
   flutter_test:
@@ -45,12 +50,46 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
+
+# Génération des icônes natives (Android mipmap-* + iOS Assets.xcassets)
+# depuis `assets/icon/icon.png` (1254×1254 RGB sans alpha).
+# Lancer : `dart run flutter_launcher_icons`
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21
+  # remove_alpha_ios non requis : la source est RGB (pas d'alpha à supprimer).
+  # Adaptive icon Android 8+ : on skip pour cette itération.
+  # Le logo a un fond baked-in qui ferait du double-masking si on l'utilisait
+  # comme foreground adaptive. Pour un setup propre, prévoir plus tard un asset
+  # "foreground only" (juste le contenu, fond transparent) + couleur de fond.
+
+# Splash screen natif (windowBackground Android + LaunchScreen iOS).
+# Affiché par l'OS jusqu'à ce que Flutter ait son premier frame — pas de durée fixe.
+# Lancer : `dart run flutter_native_splash:create`
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#141218"
+  image: assets/icon/icon.png
+  image_dark: assets/icon/icon.png
+  android_12:
+    color: "#FFFFFF"
+    color_dark: "#141218"
+    image: assets/icon/icon.png
+    image_dark: assets/icon/icon.png
+    # Android 12+ utilise une API de splash limitée :
+    # icône centrée (zone safe 160dp), pas de texte, fond plein.
+    # icon_background_color: facultatif si on veut un cercle de couleur derrière l'icône.
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
 flutter:
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

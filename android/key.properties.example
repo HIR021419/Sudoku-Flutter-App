@@ -1,0 +1,12 @@
+# Copier en `key.properties` et remplir avec les vraies valeurs.
+# `key.properties` est gitignoré — NE JAMAIS LE COMMIT.
+#
+# Pour générer un keystore (à faire une seule fois) :
+#   keytool -genkey -v -keystore ~/sudoku-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# Puis remplir ci-dessous (storeFile peut être un chemin absolu ou relatif au projet android/).
+
+storePassword=
+keyPassword=
+keyAlias=upload
+storeFile=

@@ -1,0 +1,37 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Sudoku",
+  "@appTitle": {
+    "description": "Application title"
+  },
+  "homeChooseDifficulty": "Choisis ta difficulté",
+  "homeResumeTitle": "Reprendre la partie",
+  "homePlayButton": "Jouer",
+  "difficultyEasy": "Facile",
+  "difficultyMedium": "Moyen",
+  "difficultyHard": "Difficile",
+  "difficultyExpert": "Expert",
+  "difficultyCluesCount": "{count} indices",
+  "@difficultyCluesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "winTitle": "Félicitations !",
+  "winSubtitle": "Sudoku {difficulty} résolu.",
+  "@winSubtitle": {
+    "placeholders": {
+      "difficulty": { "type": "String" }
+    }
+  },
+  "winStatTime": "Temps",
+  "winStatErrors": "Erreurs",
+  "winStatHints": "Indices",
+  "winBackHome": "Retour à l'accueil",
+  "toolbarUndo": "Annuler",
+  "toolbarErase": "Effacer",
+  "toolbarNotes": "Notes",
+  "toolbarFast": "Rapide",
+  "toolbarHint": "Indice",
+  "savedCorruptedSnackbar": "Sauvegarde corrompue, partie effacée."
+}
