@@ -74,4 +74,46 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get savedCorruptedSnackbar => 'Sauvegarde corrompue, partie effacée.';
+
+  @override
+  String get statsTitle => 'Statistiques';
+
+  @override
+  String get statsBestTime => 'Meilleur temps';
+
+  @override
+  String statsGamesSolved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parties',
+      one: '1 partie',
+      zero: 'Aucune partie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsNoRecord => '—';
+
+  @override
+  String get settingsTitle => 'Paramètres';
+
+  @override
+  String get settingsSound => 'Son';
+
+  @override
+  String get settingsHaptic => 'Retour haptique';
+
+  @override
+  String get settingsTheme => 'Thème';
+
+  @override
+  String get themeSystem => 'Système';
+
+  @override
+  String get themeLight => 'Clair';
+
+  @override
+  String get themeDark => 'Sombre';
 }

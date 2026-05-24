@@ -20,5 +20,16 @@
   "toolbarNotes": "Notes",
   "toolbarFast": "Fast",
   "toolbarHint": "Hint",
-  "savedCorruptedSnackbar": "Save corrupted, game cleared."
+  "savedCorruptedSnackbar": "Save corrupted, game cleared.",
+  "statsTitle": "Statistics",
+  "statsBestTime": "Best time",
+  "statsGamesSolved": "{count, plural, =0{No games} =1{1 game} other{{count} games}}",
+  "statsNoRecord": "—",
+  "settingsTitle": "Settings",
+  "settingsSound": "Sound",
+  "settingsHaptic": "Haptic feedback",
+  "settingsTheme": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark"
 }

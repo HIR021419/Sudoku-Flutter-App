@@ -33,5 +33,21 @@
   "toolbarNotes": "Notes",
   "toolbarFast": "Rapide",
   "toolbarHint": "Indice",
-  "savedCorruptedSnackbar": "Sauvegarde corrompue, partie effacée."
+  "savedCorruptedSnackbar": "Sauvegarde corrompue, partie effacée.",
+  "statsTitle": "Statistiques",
+  "statsBestTime": "Meilleur temps",
+  "statsGamesSolved": "{count, plural, =0{Aucune partie} =1{1 partie} other{{count} parties}}",
+  "@statsGamesSolved": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statsNoRecord": "—",
+  "settingsTitle": "Paramètres",
+  "settingsSound": "Son",
+  "settingsHaptic": "Retour haptique",
+  "settingsTheme": "Thème",
+  "themeSystem": "Système",
+  "themeLight": "Clair",
+  "themeDark": "Sombre"
 }

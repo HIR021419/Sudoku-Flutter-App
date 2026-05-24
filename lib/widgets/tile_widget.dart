@@ -64,31 +64,56 @@ class TileWidget extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(2),
             child: Center(
-              child: vm.value != 0
-                  ? FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        vm.value.toString(),
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight:
-                              vm.isGiven ? FontWeight.w700 : FontWeight.w600,
-                          color: _textColor(
-                            colorScheme,
-                            isGiven: vm.isGiven,
-                            hasError: vm.hasError,
-                          ),
-                        ),
-                      ),
-                    )
-                  : vm.notesMask != 0
-                      ? _buildNotes(vm.notesMask, colorScheme)
-                      : null,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(
+                    scale: Tween<double>(begin: 0.5, end: 1).animate(animation),
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
+                child: _buildTileContent(vm, colorScheme),
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  /// Construit le contenu de la tuile avec une clé stable par état pour
+  /// que AnimatedSwitcher anime correctement les transitions :
+  /// - clé "val-X" : valeur posée X (chaque valeur = key différente)
+  /// - clé "notes" : présence de notes (changement de notesMask = même key, pas d'animation)
+  /// - clé "empty" : case vide sans note
+  Widget _buildTileContent(_TileVm vm, ColorScheme colorScheme) {
+    if (vm.value != 0) {
+      return FittedBox(
+        key: ValueKey('val-${vm.value}'),
+        fit: BoxFit.scaleDown,
+        child: Text(
+          vm.value.toString(),
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: vm.isGiven ? FontWeight.w700 : FontWeight.w600,
+            color: _textColor(
+              colorScheme,
+              isGiven: vm.isGiven,
+              hasError: vm.hasError,
+            ),
+          ),
+        ),
+      );
+    }
+    if (vm.notesMask != 0) {
+      return KeyedSubtree(
+        key: const ValueKey('notes'),
+        child: _buildNotes(vm.notesMask, colorScheme),
+      );
+    }
+    return const SizedBox.shrink(key: ValueKey('empty'));
   }
 
   String _buildSemanticLabel(int row, int col, _TileVm vm) {

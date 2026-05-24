@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'data/game_repository.dart';
 import 'l10n/app_localizations.dart';
+import 'models/settings_controller.dart';
+import 'models/stats_controller.dart';
 import 'pages/home_page.dart';
 
 class SudokuApp extends StatelessWidget {
   const SudokuApp({
     super.key,
     required this.repository,
+    required this.statsController,
+    required this.settingsController,
     this.initialSaved,
   });
 
   final GameRepository repository;
+  final StatsController statsController;
+  final SettingsController settingsController;
   final Map<String, dynamic>? initialSaved;
 
   ThemeData _buildTheme(Brightness brightness) {
@@ -41,20 +48,33 @@ class SudokuApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Sudoku',
-      debugShowCheckedModeBanner: false,
-      theme: _buildTheme(Brightness.light),
-      darkTheme: _buildTheme(Brightness.dark),
-      themeMode: ThemeMode.system,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<StatsController>.value(value: statsController),
+        ChangeNotifierProvider<SettingsController>.value(value: settingsController),
       ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: HomePage(repository: repository, initialSaved: initialSaved),
+      child: Consumer<SettingsController>(
+        builder: (context, settings, _) {
+          return MaterialApp(
+            title: 'Sudoku',
+            debugShowCheckedModeBanner: false,
+            theme: _buildTheme(Brightness.light),
+            darkTheme: _buildTheme(Brightness.dark),
+            themeMode: settings.settings.theme.themeMode,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: HomePage(
+              repository: repository,
+              initialSaved: initialSaved,
+            ),
+          );
+        },
+      ),
     );
   }
 }

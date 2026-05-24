@@ -4,10 +4,12 @@ import 'package:sudoku/data/game_repository.dart';
 import 'package:sudoku/entities/difficulty_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/models/game_controller.dart';
+import 'package:sudoku/pages/settings_page.dart';
 import 'package:sudoku/pages/sudoku_page.dart';
 import 'package:sudoku/utils/sudoku_utils.dart';
 import 'package:sudoku/widgets/difficulty_selector_widget.dart';
 import 'package:sudoku/widgets/resume_game_card.dart';
+import 'package:sudoku/widgets/stats_card_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -102,10 +104,24 @@ class _HomePageState extends State<HomePage> {
     final saved = _saved;
 
     return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 48,
+        actions: [
+          IconButton(
+            tooltip: AppLocalizations.of(context).settingsTitle,
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+              );
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
@@ -152,6 +168,8 @@ class _HomePageState extends State<HomePage> {
                     onPlay: _onPlay,
                     isLoading: _generating,
                   ),
+                  const SizedBox(height: 24),
+                  const StatsCardWidget(),
                 ],
               ),
             ),

@@ -223,6 +223,72 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Sauvegarde corrompue, partie effacée.'**
   String get savedCorruptedSnackbar;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Statistiques'**
+  String get statsTitle;
+
+  /// No description provided for @statsBestTime.
+  ///
+  /// In fr, this message translates to:
+  /// **'Meilleur temps'**
+  String get statsBestTime;
+
+  /// No description provided for @statsGamesSolved.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =0{Aucune partie} =1{1 partie} other{{count} parties}}'**
+  String statsGamesSolved(int count);
+
+  /// No description provided for @statsNoRecord.
+  ///
+  /// In fr, this message translates to:
+  /// **'—'**
+  String get statsNoRecord;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paramètres'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsSound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Son'**
+  String get settingsSound;
+
+  /// No description provided for @settingsHaptic.
+  ///
+  /// In fr, this message translates to:
+  /// **'Retour haptique'**
+  String get settingsHaptic;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In fr, this message translates to:
+  /// **'Thème'**
+  String get settingsTheme;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In fr, this message translates to:
+  /// **'Système'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In fr, this message translates to:
+  /// **'Clair'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sombre'**
+  String get themeDark;
 }
 
 class _AppLocalizationsDelegate

@@ -39,6 +39,7 @@ dependencies:
   provider: ^6.1.5+1
   shared_preferences: ^2.5.5
   intl: any
+  confetti: ^0.8.0
 
 dev_dependencies:
   flutter_test:
@@ -70,19 +71,22 @@ flutter_launcher_icons:
 # Splash screen natif (windowBackground Android + LaunchScreen iOS).
 # Affiché par l'OS jusqu'à ce que Flutter ait son premier frame — pas de durée fixe.
 # Lancer : `dart run flutter_native_splash:create`
+#
+# Utilise `icon_foreground.png` (version transparente du logo, générée par flood-fill
+# depuis `icon.png`). Le squircle bleu flotte proprement sur le fond clair ou sombre
+# sans encadrement blanc disgracieux.
 flutter_native_splash:
   color: "#FFFFFF"
   color_dark: "#141218"
-  image: assets/icon/icon.png
-  image_dark: assets/icon/icon.png
+  image: assets/icon/icon_foreground.png
+  image_dark: assets/icon/icon_foreground.png
   android_12:
     color: "#FFFFFF"
     color_dark: "#141218"
-    image: assets/icon/icon.png
-    image_dark: assets/icon/icon.png
+    image: assets/icon/icon_foreground.png
+    image_dark: assets/icon/icon_foreground.png
     # Android 12+ utilise une API de splash limitée :
     # icône centrée (zone safe 160dp), pas de texte, fond plein.
-    # icon_background_color: facultatif si on veut un cercle de couleur derrière l'icône.
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

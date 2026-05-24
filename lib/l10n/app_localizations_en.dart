@@ -74,4 +74,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedCorruptedSnackbar => 'Save corrupted, game cleared.';
+
+  @override
+  String get statsTitle => 'Statistics';
+
+  @override
+  String get statsBestTime => 'Best time';
+
+  @override
+  String statsGamesSolved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count games',
+      one: '1 game',
+      zero: 'No games',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsNoRecord => '—';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsSound => 'Sound';
+
+  @override
+  String get settingsHaptic => 'Haptic feedback';
+
+  @override
+  String get settingsTheme => 'Theme';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
 }

@@ -1,9 +1,13 @@
+import 'dart:math' as math;
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
 import 'package:sudoku/models/game_controller.dart';
+import 'package:sudoku/models/settings_controller.dart';
+import 'package:sudoku/models/stats_controller.dart';
 import 'package:sudoku/widgets/game_toolbar_widget.dart';
 import 'package:sudoku/widgets/number_pad_widget.dart';
 import 'package:sudoku/widgets/sudoku_grid_widget.dart';
@@ -17,8 +21,11 @@ class SudokuPage extends StatefulWidget {
   State<SudokuPage> createState() => _SudokuPageState();
 }
 
-class _SudokuPageState extends State<SudokuPage> with WidgetsBindingObserver {
+class _SudokuPageState extends State<SudokuPage>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   late final GameController _controller;
+  late final AnimationController _shakeController;
+  late final ConfettiController _confettiController;
   int _lastErrorCount = 0;
   bool _wasComplete = false;
   bool _dialogShown = false;
@@ -29,6 +36,13 @@ class _SudokuPageState extends State<SudokuPage> with WidgetsBindingObserver {
     _controller = widget.controller;
     _lastErrorCount = _controller.errorCount;
     _wasComplete = _controller.isComplete;
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
     _controller.addListener(_onControllerChanged);
     WidgetsBinding.instance.addObserver(this);
   }
@@ -40,6 +54,8 @@ class _SudokuPageState extends State<SudokuPage> with WidgetsBindingObserver {
     // Flush synchronously avant disposal pour que les derniers coups soient sauvegardés.
     _controller.flushSave();
     _controller.dispose();
+    _shakeController.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -56,10 +72,14 @@ class _SudokuPageState extends State<SudokuPage> with WidgetsBindingObserver {
   void _onControllerChanged() {
     if (!mounted) return;
 
-    // Haptique sur erreur (sans bloquer l'UI).
+    final hapticEnabled =
+        context.read<SettingsController>().settings.hapticEnabled;
+
+    // Erreur : haptique + shake animation.
     final currentErrors = _controller.errorCount;
     if (currentErrors > _lastErrorCount) {
-      HapticFeedback.lightImpact();
+      if (hapticEnabled) HapticFeedback.lightImpact();
+      _shakeController.forward(from: 0);
     }
     _lastErrorCount = currentErrors;
 
@@ -67,7 +87,15 @@ class _SudokuPageState extends State<SudokuPage> with WidgetsBindingObserver {
     final nowComplete = _controller.isComplete;
     if (nowComplete && !_wasComplete && !_dialogShown) {
       _dialogShown = true;
-      HapticFeedback.heavyImpact();
+      if (hapticEnabled) HapticFeedback.heavyImpact();
+      _confettiController.play();
+      // Enregistre la victoire dans les stats (best time + counter).
+      final duration = _controller.completedDuration;
+      if (duration != null) {
+        context
+            .read<StatsController>()
+            .recordWin(_controller.difficulty, duration);
+      }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _controller.isComplete) _showWinDialog();
       });
@@ -174,38 +202,79 @@ class _SudokuPageState extends State<SudokuPage> with WidgetsBindingObserver {
           appBar: AppBar(
             title: Text(_controller.difficulty.localizedLabel(context)),
           ),
-          body: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isLandscape =
-                    constraints.maxWidth > constraints.maxHeight * 1.1;
-                return Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: isLandscape ? _buildLandscape() : _buildPortrait(),
-                );
-              },
-            ),
+          body: Stack(
+            children: [
+              SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isLandscape =
+                        constraints.maxWidth > constraints.maxHeight * 1.1;
+                    return Padding(
+                      padding: const EdgeInsets.all(12),
+                      child:
+                          isLandscape ? _buildLandscape() : _buildPortrait(),
+                    );
+                  },
+                ),
+              ),
+              // Canon de confettis centré au sommet, tirant vers le bas.
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirection: math.pi / 2, // tire vers le bas
+                  blastDirectionality: BlastDirectionality.explosive,
+                  maxBlastForce: 25,
+                  minBlastForce: 10,
+                  emissionFrequency: 0.05,
+                  numberOfParticles: 25,
+                  gravity: 0.25,
+                  shouldLoop: false,
+                  colors: const [
+                    Color(0xFF4F46E5), // primary
+                    Color(0xFF3B82F6), // blue
+                    Color(0xFFF59E0B), // amber
+                    Color(0xFF10B981), // green
+                    Color(0xFFEC4899), // pink
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  /// Wrap la grille dans un Transform.translate animé pour le shake d'erreur.
+  /// 4 oscillations sinusoïdales avec amortissement, amplitude 8px.
+  Widget _shakingGrid() {
+    return AnimatedBuilder(
+      animation: _shakeController,
+      builder: (context, child) {
+        final t = _shakeController.value;
+        final dx = t == 0
+            ? 0.0
+            : math.sin(t * 4 * math.pi) * (1 - t) * 8;
+        return Transform.translate(offset: Offset(dx, 0), child: child);
+      },
+      child: const AspectRatio(
+        aspectRatio: 1,
+        child: SudokuGridWidget(),
+      ),
+    );
+  }
+
   Widget _buildPortrait() {
     return Column(
-      children: const [
+      children: [
         Expanded(
-          child: Center(
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: SudokuGridWidget(),
-            ),
-          ),
+          child: Center(child: _shakingGrid()),
         ),
-        SizedBox(height: 16),
-        GameToolbarWidget(),
-        SizedBox(height: 12),
-        NumberPadWidget(),
+        const SizedBox(height: 16),
+        const GameToolbarWidget(),
+        const SizedBox(height: 12),
+        const NumberPadWidget(),
       ],
     );
   }
@@ -213,18 +282,13 @@ class _SudokuPageState extends State<SudokuPage> with WidgetsBindingObserver {
   Widget _buildLandscape() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: const [
+      children: [
         Expanded(
           flex: 5,
-          child: Center(
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: SudokuGridWidget(),
-            ),
-          ),
+          child: Center(child: _shakingGrid()),
         ),
-        SizedBox(width: 16),
-        Expanded(
+        const SizedBox(width: 16),
+        const Expanded(
           flex: 4,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
