@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:sudoku/data/game_repository.dart';
-import 'package:sudoku/entities/difficulty_enum.dart';
+import 'package:provider/provider.dart';
+import 'package:sudoku/repositories/game_repository.dart';
+import 'package:sudoku/entities/type/difficulty_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
-import 'package:sudoku/models/game_controller.dart';
+import 'package:sudoku/controllers/game_controller.dart';
+import 'package:sudoku/controllers/settings_controller.dart';
 import 'package:sudoku/pages/settings_page.dart';
 import 'package:sudoku/pages/sudoku_page.dart';
 import 'package:sudoku/utils/sudoku_utils.dart';
@@ -12,11 +14,7 @@ import 'package:sudoku/widgets/resume_game_card.dart';
 import 'package:sudoku/widgets/stats_card_widget.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({
-    super.key,
-    required this.repository,
-    this.initialSaved,
-  });
+  const HomePage({super.key, required this.repository, this.initialSaved});
 
   final GameRepository repository;
   final Map<String, dynamic>? initialSaved;
@@ -60,7 +58,11 @@ class _HomePageState extends State<HomePage> {
     final saved = _saved;
     if (saved == null) return;
 
-    final controller = GameController(repository: widget.repository);
+    final controller = GameController(
+      repository: widget.repository,
+      validationModeProvider: () =>
+          context.read<SettingsController>().settings.validationMode,
+    );
     final ok = controller.restoreFromJson(saved);
     if (!ok) {
       controller.dispose();
@@ -86,7 +88,11 @@ class _HomePageState extends State<HomePage> {
       // où l'unicité de solution peut prendre quelques secondes).
       final puzzle = await compute(generatePuzzleData, difficulty);
       if (!mounted) return;
-      final controller = GameController(repository: widget.repository);
+      final controller = GameController(
+        repository: widget.repository,
+        validationModeProvider: () =>
+            context.read<SettingsController>().settings.validationMode,
+      );
       controller.initFromGenerated(
         difficulty: difficulty,
         solution: puzzle.solution,
@@ -111,9 +117,9 @@ class _HomePageState extends State<HomePage> {
             tooltip: AppLocalizations.of(context).settingsTitle,
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsPage()),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
             },
           ),
         ],

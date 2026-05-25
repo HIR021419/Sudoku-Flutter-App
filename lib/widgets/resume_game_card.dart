@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sudoku/entities/difficulty_enum.dart';
+import 'package:sudoku/entities/type/difficulty_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
 

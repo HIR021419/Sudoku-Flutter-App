@@ -20,6 +20,7 @@
   "toolbarNotes": "Notes",
   "toolbarFast": "Fast",
   "toolbarHint": "Hint",
+  "toolbarValidate": "Validate",
   "savedCorruptedSnackbar": "Save corrupted, game cleared.",
   "statsTitle": "Statistics",
   "statsBestTime": "Best time",
@@ -29,6 +30,58 @@
   "settingsSound": "Sound",
   "settingsHaptic": "Haptic feedback",
   "settingsTheme": "Theme",
+  "settingsValidationMode": "Error checking",
+  "validationModeAutoCheck": "Auto-check",
+  "validationModeAutoCheckDescription": "Legacy mode. Errors are shown as soon as you enter them.",
+  "validationModeValidate": "Validate",
+  "validationModeValidateDescription": "Use a dedicated button to check the current grid.",
+  "validationModeNoCheck": "No-check",
+  "validationModeNoCheckDescription": "Errors are checked automatically only when the grid is fully filled.",
+  "leaveGameTitle": "Abandon current game?",
+  "leaveGameMessage": "Your current game will be lost and removed from the resume section.",
+  "leaveGameCancel": "Keep playing",
+  "leaveGameConfirm": "Abandon",
+  "numberPadToggleNote": "Add or remove note {number}",
+  "@numberPadToggleNote": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "numberPadDeactivate": "Deactivate {number}",
+  "@numberPadDeactivate": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "numberPadEnter": "Enter {number}",
+  "@numberPadEnter": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "tileSemanticPosition": "Cell row {row} column {col}",
+  "@tileSemanticPosition": {
+    "placeholders": {
+      "row": { "type": "int" },
+      "col": { "type": "int" }
+    }
+  },
+  "tileSemanticEmpty": "empty",
+  "tileSemanticNotes": "notes {notes}",
+  "@tileSemanticNotes": {
+    "placeholders": {
+      "notes": { "type": "String" }
+    }
+  },
+  "tileSemanticValue": "value {value}",
+  "@tileSemanticValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "tileSemanticGiven": "given",
+  "tileSemanticError": "error",
+  "tileSemanticSelected": "selected",
   "themeSystem": "System",
   "themeLight": "Light",
   "themeDark": "Dark"

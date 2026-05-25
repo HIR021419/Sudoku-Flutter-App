@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'data/game_repository.dart';
-import 'data/settings_repository.dart';
-import 'data/stats_repository.dart';
-import 'models/settings_controller.dart';
-import 'models/stats_controller.dart';
+import 'repositories/game_repository.dart';
+import 'repositories/settings_repository.dart';
+import 'repositories/stats_repository.dart';
+import 'controllers/settings_controller.dart';
+import 'controllers/stats_controller.dart';
 import 'sudoku_app.dart';
 
 Future<void> main() async {

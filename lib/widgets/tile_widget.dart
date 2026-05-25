@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sudoku/models/game_controller.dart';
+import 'package:sudoku/l10n/app_localizations.dart';
+import 'package:sudoku/controllers/game_controller.dart';
 
-/// View-model d'une tuile : record Dart 3 comparé par valeur natif.
-/// Les notes sont encodées en bitmask 9 bits (bit i = note i+1) pour que
-/// l'égalité du record reste valide même si la Set sous-jacente est mutée en place.
 typedef _TileVm = ({
   int value,
   bool isGiven,
@@ -30,6 +28,7 @@ class TileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final vm = context.select<GameController, _TileVm>(
       (c) => (
@@ -45,7 +44,7 @@ class TileWidget extends StatelessWidget {
 
     final row = index ~/ 9 + 1;
     final col = index % 9 + 1;
-    final semanticLabel = _buildSemanticLabel(row, col, vm);
+    final semanticLabel = _buildSemanticLabel(l10n, row, col, vm);
 
     return Material(
       color: _backgroundColor(
@@ -83,11 +82,6 @@ class TileWidget extends StatelessWidget {
     );
   }
 
-  /// Construit le contenu de la tuile avec une clé stable par état pour
-  /// que AnimatedSwitcher anime correctement les transitions :
-  /// - clé "val-X" : valeur posée X (chaque valeur = key différente)
-  /// - clé "notes" : présence de notes (changement de notesMask = même key, pas d'animation)
-  /// - clé "empty" : case vide sans note
   Widget _buildTileContent(_TileVm vm, ColorScheme colorScheme) {
     if (vm.value != 0) {
       return FittedBox(
@@ -116,24 +110,29 @@ class TileWidget extends StatelessWidget {
     return const SizedBox.shrink(key: ValueKey('empty'));
   }
 
-  String _buildSemanticLabel(int row, int col, _TileVm vm) {
-    final parts = <String>['Cellule ligne $row colonne $col'];
+  String _buildSemanticLabel(
+    AppLocalizations l10n,
+    int row,
+    int col,
+    _TileVm vm,
+  ) {
+    final parts = <String>[l10n.tileSemanticPosition(row, col)];
     if (vm.value == 0) {
       if (vm.notesMask == 0) {
-        parts.add('vide');
+        parts.add(l10n.tileSemanticEmpty);
       } else {
         final notes = <int>[];
         for (int i = 0; i < 9; i++) {
           if (vm.notesMask & (1 << i) != 0) notes.add(i + 1);
         }
-        parts.add('notes $notes');
+        parts.add(l10n.tileSemanticNotes(notes.join(', ')));
       }
     } else {
-      parts.add('valeur ${vm.value}');
+      parts.add(l10n.tileSemanticValue(vm.value));
     }
-    if (vm.isGiven) parts.add('initiale');
-    if (vm.hasError) parts.add('erreur');
-    if (vm.isSelected) parts.add('sélectionnée');
+    if (vm.isGiven) parts.add(l10n.tileSemanticGiven);
+    if (vm.hasError) parts.add(l10n.tileSemanticError);
+    if (vm.isSelected) parts.add(l10n.tileSemanticSelected);
     return parts.join(', ');
   }
 
@@ -173,11 +172,31 @@ class TileWidget extends StatelessWidget {
     required bool isSameValue,
     required bool isRelated,
   }) {
-    // L'erreur écrase la sélection visuellement (rouge bien marqué pour qu'on ne le confonde pas avec un given).
-    if (hasError) return cs.error.withValues(alpha: 0.38);
-    if (isSelected) return cs.primary.withValues(alpha: 0.28);
-    if (isSameValue) return cs.primary.withValues(alpha: 0.16);
-    if (isRelated) return cs.primary.withValues(alpha: 0.06);
+    final isDark = cs.brightness == Brightness.dark;
+    if (hasError) {
+      return Color.alphaBlend(
+        cs.error.withValues(alpha: isDark ? 0.40 : 0.22),
+        cs.surface,
+      );
+    }
+    if (isSelected) {
+      return Color.alphaBlend(
+        cs.primary.withValues(alpha: isDark ? 0.46 : 0.28),
+        cs.surface,
+      );
+    }
+    if (isSameValue) {
+      return Color.alphaBlend(
+        cs.secondary.withValues(alpha: isDark ? 0.30 : 0.18),
+        cs.surface,
+      );
+    }
+    if (isRelated) {
+      return Color.alphaBlend(
+        cs.primary.withValues(alpha: isDark ? 0.18 : 0.10),
+        cs.surface,
+      );
+    }
     return cs.surface;
   }
 

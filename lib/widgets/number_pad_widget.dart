@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sudoku/models/game_controller.dart';
+import 'package:sudoku/l10n/app_localizations.dart';
+import 'package:sudoku/controllers/game_controller.dart';
 
 class NumberPadWidget extends StatelessWidget {
   const NumberPadWidget({super.key});
@@ -8,47 +9,76 @@ class NumberPadWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    // On observe seulement (fillMode, notesMode, activeNumber) — pas l'état domaine.
-    final state = context.select<GameController, ({bool fillMode, bool notesMode, int? activeNumber})>(
-      (c) => (
-        fillMode: c.fillMode,
-        notesMode: c.notesMode,
-        activeNumber: c.activeNumber,
-      ),
-    );
+    final state = context
+        .select<
+          GameController,
+          ({
+            bool fillMode,
+            bool notesMode,
+            int? activeNumber,
+            int completedMask,
+          })
+        >(
+          (c) => (
+            fillMode: c.fillMode,
+            notesMode: c.notesMode,
+            activeNumber: c.activeNumber,
+            completedMask: _completedNumbersMask(c),
+          ),
+        );
+    final visibleNumbers = [
+      for (int number = 1; number <= 9; number++)
+        if (state.completedMask & (1 << (number - 1)) == 0) number,
+    ];
+
+    if (visibleNumbers.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
         const spacing = 6.0;
-        final buttonWidth = (constraints.maxWidth - spacing * 8) / 9;
+        final buttonWidth =
+            (constraints.maxWidth - spacing * (visibleNumbers.length - 1)) /
+            visibleNumbers.length;
         final buttonHeight = buttonWidth.clamp(40.0, 64.0);
 
         return SizedBox(
           height: buttonHeight,
           child: Row(
-            children: List.generate(9, (i) {
-              final number = i + 1;
-              final isActive = state.fillMode && state.activeNumber == number;
-
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(right: i == 8 ? 0 : spacing),
+            children: [
+              for (int i = 0; i < visibleNumbers.length; i++) ...[
+                if (i > 0) const SizedBox(width: spacing),
+                Expanded(
                   child: _NumberButton(
-                    number: number,
-                    isActive: isActive,
+                    number: visibleNumbers[i],
+                    isActive:
+                        state.fillMode &&
+                        state.activeNumber == visibleNumbers[i],
                     isNotes: state.notesMode,
                     colorScheme: colorScheme,
-                    onTap: () =>
-                        context.read<GameController>().onNumberPadTap(number),
+                    onTap: () => context.read<GameController>().onNumberPadTap(
+                      visibleNumbers[i],
+                    ),
                   ),
                 ),
-              );
-            }),
+              ],
+            ],
           ),
         );
       },
     );
   }
+}
+
+int _completedNumbersMask(GameController controller) {
+  int mask = 0;
+  for (int number = 1; number <= 9; number++) {
+    if (controller.isNumberCompleted(number)) {
+      mask |= 1 << (number - 1);
+    }
+  }
+  return mask;
 }
 
 class _NumberButton extends StatelessWidget {
@@ -68,6 +98,7 @@ class _NumberButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final Color bg;
     final Color fg;
     final Color border;
@@ -79,7 +110,7 @@ class _NumberButton extends StatelessWidget {
     } else if (isNotes) {
       bg = colorScheme.tertiaryContainer;
       fg = colorScheme.onTertiaryContainer;
-      border = colorScheme.tertiary.withValues(alpha: 0.4);
+      border = colorScheme.tertiary.withValues(alpha: 0.5);
     } else {
       bg = colorScheme.surfaceContainerHigh;
       fg = colorScheme.onSurface;
@@ -88,8 +119,10 @@ class _NumberButton extends StatelessWidget {
 
     return Semantics(
       label: isNotes
-          ? 'Toggle note $number'
-          : (isActive ? 'Désactiver $number' : 'Saisir $number'),
+          ? l10n.numberPadToggleNote(number)
+          : (isActive
+                ? l10n.numberPadDeactivate(number)
+                : l10n.numberPadEnter(number)),
       button: true,
       child: Material(
         color: bg,

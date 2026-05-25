@@ -1,18 +1,9 @@
 import 'dart:math';
-import 'package:sudoku/entities/difficulty_enum.dart';
+import 'package:sudoku/entities/type/difficulty_enum.dart';
+import 'package:sudoku/entities/type/undo_type.dart';
+import 'package:sudoku/entities/type/validation_mode_enum.dart';
+import 'package:sudoku/utils/migration_utils.dart';
 import 'package:sudoku/utils/sudoku_utils.dart';
-
-/// Snapshot d'une cellule pour l'historique d'undo.
-typedef UndoCell = ({int index, int value, Set<int> notes});
-
-/// Une entrée d'undo regroupe toutes les cellules affectées par UNE action.
-/// Pour un coup qui place une valeur, on snapshot la case cible + toutes les cases
-/// de la ligne/colonne/bloc dont les notes ont été nettoyées automatiquement.
-typedef UndoEntry = List<UndoCell>;
-
-/// Version actuelle du schéma JSON persisté.
-/// À incrémenter à tout breaking change (ajout/retrait/renommage de champ).
-const int kSessionSchemaVersion = 1;
 
 /// État domaine d'une partie en cours. Pas de ChangeNotifier — les changements
 /// sont visibles via le GameController qui possède cette instance.
@@ -24,18 +15,22 @@ class GameSession {
     required this.givens,
     required Map<int, Set<int>> notes,
     required List<UndoEntry> undoStack,
+    required Set<int> revealedErrors,
+    required Set<int> validatedCorrect,
     required int errorCount,
     required int hintsUsed,
     required Duration elapsedAtRestore,
     required bool isComplete,
     required Duration? completedDuration,
-  })  : _notes = notes,
-        _undoStack = undoStack,
-        _errorCount = errorCount,
-        _hintsUsed = hintsUsed,
-        _elapsedAtRestore = elapsedAtRestore,
-        _isComplete = isComplete,
-        _completedDuration = completedDuration {
+  }) : _notes = notes,
+       _undoStack = undoStack,
+       _revealedErrors = revealedErrors,
+       _validatedCorrect = validatedCorrect,
+       _errorCount = errorCount,
+       _hintsUsed = hintsUsed,
+       _elapsedAtRestore = elapsedAtRestore,
+       _isComplete = isComplete,
+       _completedDuration = completedDuration {
     if (!_isComplete) {
       _stopwatch.start();
     }
@@ -61,7 +56,9 @@ class GameSession {
   }) {
     final givensSet = givens.toSet();
     final userGrid = List<int>.generate(
-        81, (i) => givensSet.contains(i) ? solution[i] : 0);
+      81,
+      (i) => givensSet.contains(i) ? solution[i] : 0,
+    );
     return GameSession._(
       difficulty: difficulty,
       solution: solution,
@@ -69,6 +66,8 @@ class GameSession {
       givens: givensSet,
       notes: {},
       undoStack: [],
+      revealedErrors: {},
+      validatedCorrect: {},
       errorCount: 0,
       hintsUsed: 0,
       elapsedAtRestore: Duration.zero,
@@ -81,31 +80,31 @@ class GameSession {
   /// (schema version inconnue, lengths/ranges hors limites, etc).
   static GameSession? fromJson(Map<String, dynamic> json) {
     try {
-      final version = (json['schemaVersion'] as num?)?.toInt();
-      if (version != kSessionSchemaVersion) return null;
+      final migratedJson = MigrationUtils.migrateToLatest(json);
+      if (migratedJson == null) return null;
 
-      final diffName = json['difficulty'] as String?;
+      final diffName = migratedJson['difficulty'] as String?;
       if (diffName == null) return null;
       final difficulty = DifficultyEnum.values
           .where((d) => d.name == diffName)
           .firstOrNull;
       if (difficulty == null) return null;
 
-      final solution = _readIntList(json['solution']);
+      final solution = _readIntList(migratedJson['solution']);
       if (solution == null || solution.length != 81) return null;
       if (!solution.every((v) => v >= 1 && v <= 9)) return null;
 
-      final userGrid = _readIntList(json['userGrid']);
+      final userGrid = _readIntList(migratedJson['userGrid']);
       if (userGrid == null || userGrid.length != 81) return null;
       if (!userGrid.every((v) => v >= 0 && v <= 9)) return null;
 
-      final givensList = _readIntList(json['givens']);
+      final givensList = _readIntList(migratedJson['givens']);
       if (givensList == null) return null;
       if (!givensList.every((i) => i >= 0 && i < 81)) return null;
       final givens = givensList.toSet();
 
       final notes = <int, Set<int>>{};
-      final notesRaw = json['notes'];
+      final notesRaw = migratedJson['notes'];
       if (notesRaw is Map) {
         for (final entry in notesRaw.entries) {
           final keyStr = entry.key;
@@ -120,7 +119,7 @@ class GameSession {
       }
 
       final undoStack = <UndoEntry>[];
-      final undoRaw = json['undoStack'];
+      final undoRaw = migratedJson['undoStack'];
       if (undoRaw is List) {
         for (final entry in undoRaw) {
           if (entry is! Map) return null;
@@ -136,17 +135,39 @@ class GameSession {
             if (v == null || v < 0 || v > 9) return null;
             if (nList == null) return null;
             if (!nList.every((x) => x >= 1 && x <= 9)) return null;
-            entryCells.add((index: i, value: v, notes: nList.toSet()));
+            entryCells.add((
+              index: i,
+              value: v,
+              notes: nList.toSet(),
+              hasVisibleError: cell['e'] == true,
+              isValidatedCorrect: cell['ok'] == true,
+            ));
           }
           if (entryCells.isNotEmpty) undoStack.add(entryCells);
         }
       }
 
-      final errorCount = (json['errorCount'] as num?)?.toInt() ?? 0;
-      final hintsUsed = (json['hintsUsed'] as num?)?.toInt() ?? 0;
+      final revealedErrors = <int>{};
+      final revealedErrorsRaw = _readIntList(migratedJson['revealedErrors']);
+      if (revealedErrorsRaw != null) {
+        if (!revealedErrorsRaw.every((i) => i >= 0 && i < 81)) return null;
+        revealedErrors.addAll(revealedErrorsRaw);
+      }
+
+      final validatedCorrect = <int>{};
+      final validatedCorrectRaw = _readIntList(
+        migratedJson['validatedCorrect'],
+      );
+      if (validatedCorrectRaw != null) {
+        if (!validatedCorrectRaw.every((i) => i >= 0 && i < 81)) return null;
+        validatedCorrect.addAll(validatedCorrectRaw);
+      }
+
+      final errorCount = (migratedJson['errorCount'] as num?)?.toInt() ?? 0;
+      final hintsUsed = (migratedJson['hintsUsed'] as num?)?.toInt() ?? 0;
       if (errorCount < 0 || hintsUsed < 0) return null;
 
-      final elapsedMs = (json['elapsedMs'] as num?)?.toInt() ?? 0;
+      final elapsedMs = (migratedJson['elapsedMs'] as num?)?.toInt() ?? 0;
       if (elapsedMs < 0 || elapsedMs > Duration.millisecondsPerDay) return null;
 
       return GameSession._(
@@ -156,6 +177,8 @@ class GameSession {
         givens: givens,
         notes: notes,
         undoStack: undoStack,
+        revealedErrors: revealedErrors,
+        validatedCorrect: validatedCorrect,
         errorCount: errorCount,
         hintsUsed: hintsUsed,
         elapsedAtRestore: Duration(milliseconds: elapsedMs),
@@ -189,6 +212,8 @@ class GameSession {
   // --- Données qui évoluent au cours de la partie ---
   final Map<int, Set<int>> _notes;
   final List<UndoEntry> _undoStack;
+  final Set<int> _revealedErrors;
+  final Set<int> _validatedCorrect;
   int _errorCount;
   int _hintsUsed;
   bool _isComplete;
@@ -205,12 +230,20 @@ class GameSession {
   int get errorCount => _errorCount;
   int get hintsUsed => _hintsUsed;
   bool get canUndo => _undoStack.isNotEmpty;
+  bool get isFilled => !userGrid.contains(0);
 
   int valueAt(int index) => userGrid[index];
   Set<int> notesAt(int index) => _notes[index] ?? const {};
   bool isGiven(int index) => givens.contains(index);
-  bool hasError(int index) =>
-      userGrid[index] != 0 && userGrid[index] != solution[index];
+  bool hasVisibleError(int index) => _revealedErrors.contains(index);
+  bool isNumberCompleted(int number) {
+    for (int i = 0; i < 81; i++) {
+      if (solution[i] != number) continue;
+      if (userGrid[i] != number) return false;
+      if (!givens.contains(i) && !_validatedCorrect.contains(i)) return false;
+    }
+    return true;
+  }
 
   // --- Sérialisation ---
   Map<String, dynamic> toJson() {
@@ -220,20 +253,26 @@ class GameSession {
       'solution': solution,
       'userGrid': userGrid,
       'givens': givens.toList(),
-      'notes': _notes.map(
-        (k, v) => MapEntry(k.toString(), v.toList()),
-      ),
+      'notes': _notes.map((k, v) => MapEntry(k.toString(), v.toList())),
       'undoStack': _undoStack
-          .map((entry) => {
-                'cells': entry
-                    .map((c) => {
-                          'i': c.index,
-                          'v': c.value,
-                          'n': c.notes.toList(),
-                        })
-                    .toList(),
-              })
+          .map(
+            (entry) => {
+              'cells': entry
+                  .map(
+                    (c) => {
+                      'i': c.index,
+                      'v': c.value,
+                      'n': c.notes.toList(),
+                      'e': c.hasVisibleError,
+                      'ok': c.isValidatedCorrect,
+                    },
+                  )
+                  .toList(),
+            },
+          )
           .toList(),
+      'revealedErrors': _revealedErrors.toList(),
+      'validatedCorrect': _validatedCorrect.toList(),
       'errorCount': _errorCount,
       'hintsUsed': _hintsUsed,
       'elapsedMs': elapsed.inMilliseconds,
@@ -243,7 +282,11 @@ class GameSession {
   // --- Mutations domaine ---
 
   /// Place une valeur dans une case. Retourne true si l'état a changé.
-  bool applyValue(int index, int value) {
+  bool applyValue(
+    int index,
+    int value, {
+    required ValidationModeEnum validationMode,
+  }) {
     if (givens.contains(index)) return false;
     final oldValue = userGrid[index];
     if (oldValue == value) return false; // no-op : pas de undo phantom
@@ -253,12 +296,26 @@ class GameSession {
     _capUndoStack();
 
     userGrid[index] = value;
-    if (value != oldValue && value != solution[index]) {
-      _errorCount++;
-    }
     _notes.remove(index);
+    _clearCellValidation(index);
     _autoCleanNotes(index, value);
-    _checkWin();
+    switch (validationMode) {
+      case ValidationModeEnum.autoCheck:
+        if (value == solution[index]) {
+          _validatedCorrect.add(index);
+          _checkWin();
+        } else {
+          _revealedErrors.add(index);
+          _errorCount++;
+        }
+      case ValidationModeEnum.validate:
+        break;
+      case ValidationModeEnum.noCheck:
+        if (isFilled) {
+          validateBoard();
+        }
+        break;
+    }
     return true;
   }
 
@@ -272,6 +329,8 @@ class GameSession {
         index: index,
         value: userGrid[index],
         notes: Set<int>.from(_notes[index] ?? const {}),
+        hasVisibleError: _revealedErrors.contains(index),
+        isValidatedCorrect: _validatedCorrect.contains(index),
       ),
     ];
     _undoStack.add(entry);
@@ -298,6 +357,8 @@ class GameSession {
         index: index,
         value: userGrid[index],
         notes: Set<int>.from(_notes[index] ?? const {}),
+        hasVisibleError: _revealedErrors.contains(index),
+        isValidatedCorrect: _validatedCorrect.contains(index),
       ),
     ];
     _undoStack.add(entry);
@@ -305,6 +366,7 @@ class GameSession {
 
     userGrid[index] = 0;
     _notes.remove(index);
+    _clearCellValidation(index);
     return true;
   }
 
@@ -314,11 +376,20 @@ class GameSession {
     if (_undoStack.isEmpty) return false;
     final entry = _undoStack.removeLast();
     for (final cell in entry) {
+      _clearCellValidation(cell.index);
+    }
+    for (final cell in entry) {
       userGrid[cell.index] = cell.value;
       if (cell.notes.isEmpty) {
         _notes.remove(cell.index);
       } else {
         _notes[cell.index] = Set<int>.from(cell.notes);
+      }
+      if (cell.hasVisibleError) {
+        _revealedErrors.add(cell.index);
+      }
+      if (cell.isValidatedCorrect) {
+        _validatedCorrect.add(cell.index);
       }
     }
     // Si on annule depuis un état gagnant, on repasse en cours.
@@ -348,10 +419,45 @@ class GameSession {
 
     userGrid[target] = solution[target];
     _notes.remove(target);
+    _clearCellValidation(target);
+    _validatedCorrect.add(target);
     _autoCleanNotes(target, solution[target]);
     _hintsUsed++;
     _checkWin();
     return target;
+  }
+
+  int validateBoard() {
+    final nextRevealedErrors = <int>{};
+    final nextValidatedCorrect = <int>{};
+
+    for (int i = 0; i < 81; i++) {
+      if (givens.contains(i)) continue;
+      final value = userGrid[i];
+      if (value == 0) continue;
+      if (value == solution[i]) {
+        nextValidatedCorrect.add(i);
+      } else {
+        nextRevealedErrors.add(i);
+      }
+    }
+
+    var newErrors = 0;
+    for (final index in nextRevealedErrors) {
+      if (!_revealedErrors.contains(index)) {
+        newErrors++;
+      }
+    }
+
+    _revealedErrors
+      ..clear()
+      ..addAll(nextRevealedErrors);
+    _validatedCorrect
+      ..clear()
+      ..addAll(nextValidatedCorrect);
+    _errorCount += newErrors;
+    _checkWin();
+    return newErrors;
   }
 
   // --- Helpers privés ---
@@ -364,6 +470,8 @@ class GameSession {
         index: index,
         value: userGrid[index],
         notes: Set<int>.from(_notes[index] ?? const {}),
+        hasVisibleError: _revealedErrors.contains(index),
+        isValidatedCorrect: _validatedCorrect.contains(index),
       ),
     ];
     final row = index ~/ 9;
@@ -388,10 +496,17 @@ class GameSession {
           index: idx,
           value: userGrid[idx],
           notes: Set<int>.from(cellNotes),
+          hasVisibleError: _revealedErrors.contains(idx),
+          isValidatedCorrect: _validatedCorrect.contains(idx),
         ));
       }
     }
     return entry;
+  }
+
+  void _clearCellValidation(int index) {
+    _revealedErrors.remove(index);
+    _validatedCorrect.remove(index);
   }
 
   void _autoCleanNotes(int index, int value) {
@@ -427,6 +542,7 @@ class GameSession {
   void _checkWin() {
     for (int i = 0; i < 81; i++) {
       if (userGrid[i] != solution[i]) return;
+      if (!givens.contains(i) && !_validatedCorrect.contains(i)) return;
     }
     _isComplete = true;
     _completedDuration = elapsed;

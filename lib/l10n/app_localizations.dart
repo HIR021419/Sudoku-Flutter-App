@@ -218,6 +218,12 @@ abstract class AppLocalizations {
   /// **'Indice'**
   String get toolbarHint;
 
+  /// No description provided for @toolbarValidate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier'**
+  String get toolbarValidate;
+
   /// No description provided for @savedCorruptedSnackbar.
   ///
   /// In fr, this message translates to:
@@ -271,6 +277,132 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Thème'**
   String get settingsTheme;
+
+  /// No description provided for @settingsValidationMode.
+  ///
+  /// In fr, this message translates to:
+  /// **'Contrôle des erreurs'**
+  String get settingsValidationMode;
+
+  /// No description provided for @validationModeAutoCheck.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérification auto'**
+  String get validationModeAutoCheck;
+
+  /// No description provided for @validationModeAutoCheckDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode actuel. Les erreurs s\'affichent dès la saisie.'**
+  String get validationModeAutoCheckDescription;
+
+  /// No description provided for @validationModeValidate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Validation manuelle'**
+  String get validationModeValidate;
+
+  /// No description provided for @validationModeValidateDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoute un bouton pour vérifier manuellement la grille en cours.'**
+  String get validationModeValidateDescription;
+
+  /// No description provided for @validationModeNoCheck.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans vérification'**
+  String get validationModeNoCheck;
+
+  /// No description provided for @validationModeNoCheckDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Les erreurs sont vérifiées automatiquement uniquement quand la grille est complète.'**
+  String get validationModeNoCheckDescription;
+
+  /// No description provided for @leaveGameTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abandonner la partie en cours ?'**
+  String get leaveGameTitle;
+
+  /// No description provided for @leaveGameMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'La partie actuelle sera perdue et retirée de la reprise de partie.'**
+  String get leaveGameMessage;
+
+  /// No description provided for @leaveGameCancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer'**
+  String get leaveGameCancel;
+
+  /// No description provided for @leaveGameConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abandonner'**
+  String get leaveGameConfirm;
+
+  /// No description provided for @numberPadToggleNote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter ou retirer la note {number}'**
+  String numberPadToggleNote(int number);
+
+  /// No description provided for @numberPadDeactivate.
+  ///
+  /// In fr, this message translates to:
+  /// **'Désactiver {number}'**
+  String numberPadDeactivate(int number);
+
+  /// No description provided for @numberPadEnter.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisir {number}'**
+  String numberPadEnter(int number);
+
+  /// No description provided for @tileSemanticPosition.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cellule ligne {row} colonne {col}'**
+  String tileSemanticPosition(int row, int col);
+
+  /// No description provided for @tileSemanticEmpty.
+  ///
+  /// In fr, this message translates to:
+  /// **'vide'**
+  String get tileSemanticEmpty;
+
+  /// No description provided for @tileSemanticNotes.
+  ///
+  /// In fr, this message translates to:
+  /// **'notes {notes}'**
+  String tileSemanticNotes(String notes);
+
+  /// No description provided for @tileSemanticValue.
+  ///
+  /// In fr, this message translates to:
+  /// **'valeur {value}'**
+  String tileSemanticValue(int value);
+
+  /// No description provided for @tileSemanticGiven.
+  ///
+  /// In fr, this message translates to:
+  /// **'initiale'**
+  String get tileSemanticGiven;
+
+  /// No description provided for @tileSemanticError.
+  ///
+  /// In fr, this message translates to:
+  /// **'erreur'**
+  String get tileSemanticError;
+
+  /// No description provided for @tileSemanticSelected.
+  ///
+  /// In fr, this message translates to:
+  /// **'sélectionnée'**
+  String get tileSemanticSelected;
 
   /// No description provided for @themeSystem.
   ///

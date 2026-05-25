@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sudoku/entities/type/theme_preference_enum.dart';
+import 'package:sudoku/entities/type/validation_mode_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
-import 'package:sudoku/models/settings.dart';
-import 'package:sudoku/models/settings_controller.dart';
+import 'package:sudoku/controllers/settings_controller.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -15,9 +16,7 @@ class SettingsPage extends StatelessWidget {
     final controller = context.read<SettingsController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.settingsTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -72,20 +71,23 @@ class SettingsPage extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: SegmentedButton<ThemePreference>(
+                  child: SegmentedButton<ThemePreferenceEnum>(
                     segments: [
                       ButtonSegment(
-                        value: ThemePreference.system,
+                        value: ThemePreferenceEnum.system,
                         label: Text(l10n.themeSystem),
-                        icon: const Icon(Icons.brightness_auto_rounded, size: 18),
+                        icon: const Icon(
+                          Icons.brightness_auto_rounded,
+                          size: 18,
+                        ),
                       ),
                       ButtonSegment(
-                        value: ThemePreference.light,
+                        value: ThemePreferenceEnum.light,
                         label: Text(l10n.themeLight),
                         icon: const Icon(Icons.light_mode_rounded, size: 18),
                       ),
                       ButtonSegment(
-                        value: ThemePreference.dark,
+                        value: ThemePreferenceEnum.dark,
                         label: Text(l10n.themeDark),
                         icon: const Icon(Icons.dark_mode_rounded, size: 18),
                       ),
@@ -93,6 +95,62 @@ class SettingsPage extends StatelessWidget {
                     selected: {settings.theme},
                     onSelectionChanged: (s) => controller.setTheme(s.first),
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _SectionCard(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.rule_folder_outlined,
+                        color: colorScheme.onSurfaceVariant,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          l10n.settingsValidationMode,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                RadioListTile<ValidationModeEnum>(
+                  title: Text(l10n.validationModeAutoCheck),
+                  subtitle: Text(l10n.validationModeAutoCheckDescription),
+                  value: ValidationModeEnum.autoCheck,
+                  groupValue: settings.validationMode,
+                  onChanged: (value) {
+                    if (value != null) controller.setValidationMode(value);
+                  },
+                ),
+                const Divider(height: 1),
+                RadioListTile<ValidationModeEnum>(
+                  title: Text(l10n.validationModeValidate),
+                  subtitle: Text(l10n.validationModeValidateDescription),
+                  value: ValidationModeEnum.validate,
+                  groupValue: settings.validationMode,
+                  onChanged: (value) {
+                    if (value != null) controller.setValidationMode(value);
+                  },
+                ),
+                const Divider(height: 1),
+                RadioListTile<ValidationModeEnum>(
+                  title: Text(l10n.validationModeNoCheck),
+                  subtitle: Text(l10n.validationModeNoCheckDescription),
+                  value: ValidationModeEnum.noCheck,
+                  groupValue: settings.validationMode,
+                  onChanged: (value) {
+                    if (value != null) controller.setValidationMode(value);
+                  },
                 ),
               ],
             ),

@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:sudoku/entities/difficulty_enum.dart';
+import 'package:sudoku/entities/type/difficulty_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 
 /// Extension qui retourne le label localisé d'une difficulté.

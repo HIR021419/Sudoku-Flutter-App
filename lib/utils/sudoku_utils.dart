@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:sudoku/entities/difficulty_enum.dart';
+import 'package:sudoku/entities/type/difficulty_enum.dart';
 
 /// Données d'un puzzle généré.
 /// Fonction top-level pour pouvoir être passée à `compute()` et exécutée dans un isolate.

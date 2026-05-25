@@ -2,11 +2,11 @@
 // avec des repositories en mémoire. Les vrais tests viendront dans une itération dédiée.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sudoku/data/game_repository.dart';
-import 'package:sudoku/data/settings_repository.dart';
-import 'package:sudoku/data/stats_repository.dart';
-import 'package:sudoku/models/settings_controller.dart';
-import 'package:sudoku/models/stats_controller.dart';
+import 'package:sudoku/repositories/game_repository.dart';
+import 'package:sudoku/repositories/settings_repository.dart';
+import 'package:sudoku/repositories/stats_repository.dart';
+import 'package:sudoku/controllers/settings_controller.dart';
+import 'package:sudoku/controllers/stats_controller.dart';
 import 'package:sudoku/sudoku_app.dart';
 
 class _InMemoryGameRepository implements GameRepository {

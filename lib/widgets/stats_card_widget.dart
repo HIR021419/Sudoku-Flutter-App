@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sudoku/entities/difficulty_enum.dart';
+import 'package:sudoku/entities/type/difficulty_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
-import 'package:sudoku/models/stats.dart';
-import 'package:sudoku/models/stats_controller.dart';
+import 'package:sudoku/entities/stats.dart';
+import 'package:sudoku/controllers/stats_controller.dart';
 
 class StatsCardWidget extends StatelessWidget {
   const StatsCardWidget({super.key});

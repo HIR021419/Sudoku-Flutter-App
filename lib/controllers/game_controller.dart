@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
-import 'package:sudoku/data/game_repository.dart';
-import 'package:sudoku/entities/difficulty_enum.dart';
-import 'package:sudoku/models/game_session.dart';
+import 'package:sudoku/entities/type/validation_mode_enum.dart';
+import 'package:sudoku/repositories/game_repository.dart';
+import 'package:sudoku/entities/type/difficulty_enum.dart';
+import 'package:sudoku/entities/game_session.dart';
 import 'package:sudoku/models/game_ui_notifier.dart';
 
 /// Coordinateur entre [GameSession] (domaine), [GameUiNotifier] (UI éphémère)
@@ -12,17 +13,26 @@ import 'package:sudoku/models/game_ui_notifier.dart';
 /// Persistance : debounce 500ms après mutation, flush synchrone via [flushSave]
 /// (à appeler sur AppLifecycleState.paused/detached).
 class GameController extends ChangeNotifier {
-  GameController({required GameRepository repository}) : _repository = repository {
+  GameController({
+    required GameRepository repository,
+    required ValidationModeEnum Function() validationModeProvider,
+  }) : _repository = repository,
+       _validationModeProvider = validationModeProvider {
     _ui.addListener(_onUiChanged);
   }
 
   final GameRepository _repository;
+  final ValidationModeEnum Function() _validationModeProvider;
   GameSession? _session;
   final GameUiNotifier _ui = GameUiNotifier();
   final Random _random = Random();
   Timer? _saveTimer;
-  ({bool notesMode, bool fillMode, int? activeNumber}) _lastPersistedUi =
-      (notesMode: false, fillMode: false, activeNumber: null);
+  bool _saveEnabled = true;
+  ({bool notesMode, bool fillMode, int? activeNumber}) _lastPersistedUi = (
+    notesMode: false,
+    fillMode: false,
+    activeNumber: null,
+  );
 
   // --- Accesseurs ---
 
@@ -37,6 +47,7 @@ class GameController extends ChangeNotifier {
   int get errorCount => session.errorCount;
   int get hintsUsed => session.hintsUsed;
   bool get canUndo => session.canUndo;
+  ValidationModeEnum get validationMode => _validationModeProvider();
 
   int? get selectedIndex => _ui.selectedIndex;
   bool get notesMode => _ui.notesMode;
@@ -48,7 +59,8 @@ class GameController extends ChangeNotifier {
   int valueAt(int index) => session.valueAt(index);
   Set<int> notesAt(int index) => session.notesAt(index);
   bool isGiven(int index) => session.isGiven(index);
-  bool hasError(int index) => session.hasError(index);
+  bool hasError(int index) => session.hasVisibleError(index);
+  bool isNumberCompleted(int number) => session.isNumberCompleted(number);
   bool isSelected(int index) => _ui.selectedIndex == index;
 
   bool isRelated(int index) {
@@ -56,17 +68,15 @@ class GameController extends ChangeNotifier {
     if (sel == null || index == sel) return false;
     final r = index ~/ 9, c = index % 9;
     final sr = sel ~/ 9, sc = sel % 9;
-    return r == sr ||
-        c == sc ||
-        (r ~/ 3 == sr ~/ 3 && c ~/ 3 == sc ~/ 3);
+    return r == sr || c == sc || (r ~/ 3 == sr ~/ 3 && c ~/ 3 == sc ~/ 3);
   }
 
   bool isSameValue(int index) {
     final ref = _ui.fillMode
         ? _ui.activeNumber
         : (_ui.selectedIndex != null
-            ? session.valueAt(_ui.selectedIndex!)
-            : null);
+              ? session.valueAt(_ui.selectedIndex!)
+              : null);
     if (ref == null || ref == 0) return false;
     return session.valueAt(index) == ref && index != _ui.selectedIndex;
   }
@@ -75,6 +85,7 @@ class GameController extends ChangeNotifier {
 
   void initNewGame(DifficultyEnum diff) {
     _session = GameSession.newGame(diff);
+    _saveEnabled = true;
     _ui.reset();
     _lastPersistedUi = (notesMode: false, fillMode: false, activeNumber: null);
     _scheduleSave();
@@ -93,6 +104,7 @@ class GameController extends ChangeNotifier {
       solution: solution,
       givens: givens,
     );
+    _saveEnabled = true;
     _ui.reset();
     _lastPersistedUi = (notesMode: false, fillMode: false, activeNumber: null);
     _scheduleSave();
@@ -105,6 +117,7 @@ class GameController extends ChangeNotifier {
     final restored = GameSession.fromJson(json);
     if (restored == null) return false;
     _session = restored;
+    _saveEnabled = true;
     final uiJson = json['ui'];
     if (uiJson is Map<String, dynamic>) {
       _ui.restoreFromJson(uiJson);
@@ -124,30 +137,39 @@ class GameController extends ChangeNotifier {
   // --- Actions utilisateur ---
 
   void onTileTap(int index) {
-    if (_ui.fillMode && _ui.activeNumber != null) {
+    if (_ui.fillMode && session.userGrid[index] != 0) {
+      _ui.setActiveNumber(session.userGrid[index]);
+    } else if (_ui.fillMode && _ui.activeNumber != null) {
       final changed = _ui.notesMode
           ? session.toggleNote(index, _ui.activeNumber!)
-          : session.applyValue(index, _ui.activeNumber!);
+          : session.applyValue(
+              index,
+              _ui.activeNumber!,
+              validationMode: validationMode,
+            );
       if (changed) {
+        _syncCompletedNumberState();
         _scheduleSave();
         notifyListeners();
       }
-    } else {
-      _ui.select(index);
     }
+
+    _ui.select(index);
   }
 
   void onNumberPadTap(int number) {
     if (_ui.fillMode) {
       _ui.setActiveNumber(_ui.activeNumber == number ? null : number);
+      _ui.select(null);
       return;
     }
     final idx = _ui.selectedIndex;
     if (idx == null) return;
     final changed = _ui.notesMode
         ? session.toggleNote(idx, number)
-        : session.applyValue(idx, number);
+        : session.applyValue(idx, number, validationMode: validationMode);
     if (changed) {
+      _syncCompletedNumberState();
       _scheduleSave();
       notifyListeners();
     }
@@ -157,6 +179,7 @@ class GameController extends ChangeNotifier {
     final idx = _ui.selectedIndex;
     if (idx == null) return;
     if (session.eraseCell(idx)) {
+      _syncCompletedNumberState();
       _scheduleSave();
       notifyListeners();
     }
@@ -167,6 +190,7 @@ class GameController extends ChangeNotifier {
 
   void undo() {
     if (session.undo()) {
+      _syncCompletedNumberState();
       _scheduleSave();
       notifyListeners();
     }
@@ -175,9 +199,27 @@ class GameController extends ChangeNotifier {
   void hint() {
     final target = session.applyHint(_random);
     if (target != null) {
+      _syncCompletedNumberState();
       _ui.select(target);
       _scheduleSave();
       notifyListeners();
+    }
+  }
+
+  void validateBoard() {
+    session.validateBoard();
+    _syncCompletedNumberState();
+    _scheduleSave();
+    notifyListeners();
+  }
+
+  Future<void> abandonGame() async {
+    _saveEnabled = false;
+    _saveTimer?.cancel();
+    try {
+      await _repository.clear();
+    } catch (e, st) {
+      debugPrint('GameController.abandonGame failed: $e\n$st');
     }
   }
 
@@ -200,6 +242,7 @@ class GameController extends ChangeNotifier {
   }
 
   void _scheduleSave() {
+    if (!_saveEnabled) return;
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 500), _flushSave);
   }
@@ -212,18 +255,22 @@ class GameController extends ChangeNotifier {
   }
 
   Future<void> _flushSave() async {
-    if (_session == null) return;
+    if (_session == null || !_saveEnabled) return;
     try {
       if (session.isComplete) {
         await _repository.clear();
       } else {
-        await _repository.save({
-          ...session.toJson(),
-          'ui': _ui.toJson(),
-        });
+        await _repository.save({...session.toJson(), 'ui': _ui.toJson()});
       }
     } catch (e, st) {
       debugPrint('GameController._flushSave failed: $e\n$st');
+    }
+  }
+
+  void _syncCompletedNumberState() {
+    final number = _ui.activeNumber;
+    if (number != null && session.isNumberCompleted(number)) {
+      _ui.setActiveNumber(null);
     }
   }
 

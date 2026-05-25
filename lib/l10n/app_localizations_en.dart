@@ -73,6 +73,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolbarHint => 'Hint';
 
   @override
+  String get toolbarValidate => 'Validate';
+
+  @override
   String get savedCorruptedSnackbar => 'Save corrupted, game cleared.';
 
   @override
@@ -107,6 +110,85 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTheme => 'Theme';
+
+  @override
+  String get settingsValidationMode => 'Error checking';
+
+  @override
+  String get validationModeAutoCheck => 'Auto-check';
+
+  @override
+  String get validationModeAutoCheckDescription =>
+      'Legacy mode. Errors are shown as soon as you enter them.';
+
+  @override
+  String get validationModeValidate => 'Validate';
+
+  @override
+  String get validationModeValidateDescription =>
+      'Use a dedicated button to check the current grid.';
+
+  @override
+  String get validationModeNoCheck => 'No-check';
+
+  @override
+  String get validationModeNoCheckDescription =>
+      'Errors are checked automatically only when the grid is fully filled.';
+
+  @override
+  String get leaveGameTitle => 'Abandon current game?';
+
+  @override
+  String get leaveGameMessage =>
+      'Your current game will be lost and removed from the resume section.';
+
+  @override
+  String get leaveGameCancel => 'Keep playing';
+
+  @override
+  String get leaveGameConfirm => 'Abandon';
+
+  @override
+  String numberPadToggleNote(int number) {
+    return 'Add or remove note $number';
+  }
+
+  @override
+  String numberPadDeactivate(int number) {
+    return 'Deactivate $number';
+  }
+
+  @override
+  String numberPadEnter(int number) {
+    return 'Enter $number';
+  }
+
+  @override
+  String tileSemanticPosition(int row, int col) {
+    return 'Cell row $row column $col';
+  }
+
+  @override
+  String get tileSemanticEmpty => 'empty';
+
+  @override
+  String tileSemanticNotes(String notes) {
+    return 'notes $notes';
+  }
+
+  @override
+  String tileSemanticValue(int value) {
+    return 'value $value';
+  }
+
+  @override
+  String get tileSemanticGiven => 'given';
+
+  @override
+  String get tileSemanticError => 'error';
+
+  @override
+  String get tileSemanticSelected => 'selected';
 
   @override
   String get themeSystem => 'System';

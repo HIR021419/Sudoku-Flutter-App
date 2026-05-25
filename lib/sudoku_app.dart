@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'data/game_repository.dart';
+import 'repositories/game_repository.dart';
 import 'l10n/app_localizations.dart';
-import 'models/settings_controller.dart';
-import 'models/stats_controller.dart';
+import 'controllers/settings_controller.dart';
+import 'controllers/stats_controller.dart';
 import 'pages/home_page.dart';
 
 class SudokuApp extends StatelessWidget {

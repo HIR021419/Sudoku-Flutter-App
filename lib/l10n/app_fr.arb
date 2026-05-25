@@ -33,6 +33,7 @@
   "toolbarNotes": "Notes",
   "toolbarFast": "Rapide",
   "toolbarHint": "Indice",
+  "toolbarValidate": "Vérifier",
   "savedCorruptedSnackbar": "Sauvegarde corrompue, partie effacée.",
   "statsTitle": "Statistiques",
   "statsBestTime": "Meilleur temps",
@@ -47,6 +48,58 @@
   "settingsSound": "Son",
   "settingsHaptic": "Retour haptique",
   "settingsTheme": "Thème",
+  "settingsValidationMode": "Contrôle des erreurs",
+  "validationModeAutoCheck": "Vérification auto",
+  "validationModeAutoCheckDescription": "Mode actuel. Les erreurs s'affichent dès la saisie.",
+  "validationModeValidate": "Validation manuelle",
+  "validationModeValidateDescription": "Ajoute un bouton pour vérifier manuellement la grille en cours.",
+  "validationModeNoCheck": "Sans vérification",
+  "validationModeNoCheckDescription": "Les erreurs sont vérifiées automatiquement uniquement quand la grille est complète.",
+  "leaveGameTitle": "Abandonner la partie en cours ?",
+  "leaveGameMessage": "La partie actuelle sera perdue et retirée de la reprise de partie.",
+  "leaveGameCancel": "Continuer",
+  "leaveGameConfirm": "Abandonner",
+  "numberPadToggleNote": "Ajouter ou retirer la note {number}",
+  "@numberPadToggleNote": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "numberPadDeactivate": "Désactiver {number}",
+  "@numberPadDeactivate": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "numberPadEnter": "Saisir {number}",
+  "@numberPadEnter": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "tileSemanticPosition": "Cellule ligne {row} colonne {col}",
+  "@tileSemanticPosition": {
+    "placeholders": {
+      "row": { "type": "int" },
+      "col": { "type": "int" }
+    }
+  },
+  "tileSemanticEmpty": "vide",
+  "tileSemanticNotes": "notes {notes}",
+  "@tileSemanticNotes": {
+    "placeholders": {
+      "notes": { "type": "String" }
+    }
+  },
+  "tileSemanticValue": "valeur {value}",
+  "@tileSemanticValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "tileSemanticGiven": "initiale",
+  "tileSemanticError": "erreur",
+  "tileSemanticSelected": "sélectionnée",
   "themeSystem": "Système",
   "themeLight": "Clair",
   "themeDark": "Sombre"

@@ -1,4 +1,4 @@
-import 'package:sudoku/entities/difficulty_enum.dart';
+import 'package:sudoku/entities/type/difficulty_enum.dart';
 
 const int kStatsSchemaVersion = 1;
 

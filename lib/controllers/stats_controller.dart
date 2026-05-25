@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:sudoku/data/stats_repository.dart';
-import 'package:sudoku/entities/difficulty_enum.dart';
-import 'package:sudoku/models/stats.dart';
+import 'package:sudoku/repositories/stats_repository.dart';
+import 'package:sudoku/entities/type/difficulty_enum.dart';
+import 'package:sudoku/entities/stats.dart';
 
 /// ChangeNotifier qui expose [Stats] et gère la persistance.
 /// Une seule instance partagée pour toute l'app, fournie via Provider à la racine.

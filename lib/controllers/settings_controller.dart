@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
-import 'package:sudoku/data/settings_repository.dart';
-import 'package:sudoku/models/settings.dart';
+import 'package:sudoku/entities/type/theme_preference_enum.dart';
+import 'package:sudoku/entities/type/validation_mode_enum.dart';
+import 'package:sudoku/repositories/settings_repository.dart';
+import 'package:sudoku/entities/settings.dart';
 
 class SettingsController extends ChangeNotifier {
   SettingsController({required SettingsRepository repository})
-      : _repo = repository;
+    : _repo = repository;
 
   final SettingsRepository _repo;
   Settings _settings = const Settings();
@@ -34,9 +36,16 @@ class SettingsController extends ChangeNotifier {
     await _persist();
   }
 
-  Future<void> setTheme(ThemePreference value) async {
+  Future<void> setTheme(ThemePreferenceEnum value) async {
     if (_settings.theme == value) return;
     _settings = _settings.copyWith(theme: value);
+    notifyListeners();
+    await _persist();
+  }
+
+  Future<void> setValidationMode(ValidationModeEnum value) async {
+    if (_settings.validationMode == value) return;
+    _settings = _settings.copyWith(validationMode: value);
     notifyListeners();
     await _persist();
   }

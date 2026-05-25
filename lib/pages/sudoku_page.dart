@@ -5,9 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
-import 'package:sudoku/models/game_controller.dart';
-import 'package:sudoku/models/settings_controller.dart';
-import 'package:sudoku/models/stats_controller.dart';
+import 'package:sudoku/controllers/game_controller.dart';
+import 'package:sudoku/controllers/settings_controller.dart';
+import 'package:sudoku/controllers/stats_controller.dart';
 import 'package:sudoku/widgets/game_toolbar_widget.dart';
 import 'package:sudoku/widgets/number_pad_widget.dart';
 import 'package:sudoku/widgets/sudoku_grid_widget.dart';
@@ -29,6 +29,7 @@ class _SudokuPageState extends State<SudokuPage>
   int _lastErrorCount = 0;
   bool _wasComplete = false;
   bool _dialogShown = false;
+  bool _exitFlowInProgress = false;
 
   @override
   void initState() {
@@ -51,7 +52,6 @@ class _SudokuPageState extends State<SudokuPage>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _controller.removeListener(_onControllerChanged);
-    // Flush synchronously avant disposal pour que les derniers coups soient sauvegardés.
     _controller.flushSave();
     _controller.dispose();
     _shakeController.dispose();
@@ -72,10 +72,11 @@ class _SudokuPageState extends State<SudokuPage>
   void _onControllerChanged() {
     if (!mounted) return;
 
-    final hapticEnabled =
-        context.read<SettingsController>().settings.hapticEnabled;
+    final hapticEnabled = context
+        .read<SettingsController>()
+        .settings
+        .hapticEnabled;
 
-    // Erreur : haptique + shake animation.
     final currentErrors = _controller.errorCount;
     if (currentErrors > _lastErrorCount) {
       if (hapticEnabled) HapticFeedback.lightImpact();
@@ -83,24 +84,22 @@ class _SudokuPageState extends State<SudokuPage>
     }
     _lastErrorCount = currentErrors;
 
-    // Détection de transition isComplete pour gérer le dialog re-armable.
     final nowComplete = _controller.isComplete;
     if (nowComplete && !_wasComplete && !_dialogShown) {
       _dialogShown = true;
       if (hapticEnabled) HapticFeedback.heavyImpact();
       _confettiController.play();
-      // Enregistre la victoire dans les stats (best time + counter).
       final duration = _controller.completedDuration;
       if (duration != null) {
-        context
-            .read<StatsController>()
-            .recordWin(_controller.difficulty, duration);
+        context.read<StatsController>().recordWin(
+          _controller.difficulty,
+          duration,
+        );
       }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _controller.isComplete) _showWinDialog();
       });
     } else if (!nowComplete && _wasComplete) {
-      // Undo après win → on re-arme le dialog pour la prochaine victoire.
       _dialogShown = false;
     }
     _wasComplete = nowComplete;
@@ -176,6 +175,54 @@ class _SudokuPageState extends State<SudokuPage>
     );
   }
 
+  Future<void> _handleExitAttempt() async {
+    if (_exitFlowInProgress) return;
+    _exitFlowInProgress = true;
+
+    if (_controller.isComplete) {
+      await _controller.flushSave();
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      _exitFlowInProgress = false;
+      return;
+    }
+
+    final shouldAbandon = await _showAbandonDialog();
+    if (!mounted || !shouldAbandon) {
+      _exitFlowInProgress = false;
+      return;
+    }
+
+    await _controller.abandonGame();
+    if (mounted && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+    _exitFlowInProgress = false;
+  }
+
+  Future<bool> _showAbandonDialog() async {
+    final l10n = AppLocalizations.of(context);
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.leaveGameTitle),
+        content: Text(l10n.leaveGameMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.leaveGameCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.leaveGameConfirm),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   String _formatDuration(Duration d) {
     final hours = d.inHours;
     final minutes = d.inMinutes % 60;
@@ -193,14 +240,18 @@ class _SudokuPageState extends State<SudokuPage>
     return ChangeNotifierProvider<GameController>.value(
       value: _controller,
       child: PopScope(
-        canPop: !_controller.isComplete,
+        canPop: false,
         onPopInvokedWithResult: (didPop, result) {
-          // Force flush si l'utilisateur sort autrement (back gesture).
-          if (didPop) _controller.flushSave();
+          if (didPop) return;
+          _handleExitAttempt();
         },
         child: Scaffold(
           appBar: AppBar(
             title: Text(_controller.difficulty.localizedLabel(context)),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _handleExitAttempt,
+            ),
           ),
           body: Stack(
             children: [
@@ -211,18 +262,16 @@ class _SudokuPageState extends State<SudokuPage>
                         constraints.maxWidth > constraints.maxHeight * 1.1;
                     return Padding(
                       padding: const EdgeInsets.all(12),
-                      child:
-                          isLandscape ? _buildLandscape() : _buildPortrait(),
+                      child: isLandscape ? _buildLandscape() : _buildPortrait(),
                     );
                   },
                 ),
               ),
-              // Canon de confettis centré au sommet, tirant vers le bas.
               Align(
                 alignment: Alignment.topCenter,
                 child: ConfettiWidget(
                   confettiController: _confettiController,
-                  blastDirection: math.pi / 2, // tire vers le bas
+                  blastDirection: math.pi / 2,
                   blastDirectionality: BlastDirectionality.explosive,
                   maxBlastForce: 25,
                   minBlastForce: 10,
@@ -231,11 +280,11 @@ class _SudokuPageState extends State<SudokuPage>
                   gravity: 0.25,
                   shouldLoop: false,
                   colors: const [
-                    Color(0xFF4F46E5), // primary
-                    Color(0xFF3B82F6), // blue
-                    Color(0xFFF59E0B), // amber
-                    Color(0xFF10B981), // green
-                    Color(0xFFEC4899), // pink
+                    Color(0xFF4F46E5),
+                    Color(0xFF3B82F6),
+                    Color(0xFFF59E0B),
+                    Color(0xFF10B981),
+                    Color(0xFFEC4899),
                   ],
                 ),
               ),
@@ -246,31 +295,22 @@ class _SudokuPageState extends State<SudokuPage>
     );
   }
 
-  /// Wrap la grille dans un Transform.translate animé pour le shake d'erreur.
-  /// 4 oscillations sinusoïdales avec amortissement, amplitude 8px.
   Widget _shakingGrid() {
     return AnimatedBuilder(
       animation: _shakeController,
       builder: (context, child) {
         final t = _shakeController.value;
-        final dx = t == 0
-            ? 0.0
-            : math.sin(t * 4 * math.pi) * (1 - t) * 8;
+        final dx = t == 0 ? 0.0 : math.sin(t * 4 * math.pi) * (1 - t) * 8;
         return Transform.translate(offset: Offset(dx, 0), child: child);
       },
-      child: const AspectRatio(
-        aspectRatio: 1,
-        child: SudokuGridWidget(),
-      ),
+      child: const AspectRatio(aspectRatio: 1, child: SudokuGridWidget()),
     );
   }
 
   Widget _buildPortrait() {
     return Column(
       children: [
-        Expanded(
-          child: Center(child: _shakingGrid()),
-        ),
+        Expanded(child: Center(child: _shakingGrid())),
         const SizedBox(height: 16),
         const GameToolbarWidget(),
         const SizedBox(height: 12),
@@ -283,10 +323,7 @@ class _SudokuPageState extends State<SudokuPage>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Expanded(
-          flex: 5,
-          child: Center(child: _shakingGrid()),
-        ),
+        Expanded(flex: 5, child: Center(child: _shakingGrid())),
         const SizedBox(width: 16),
         const Expanded(
           flex: 4,
@@ -333,18 +370,12 @@ class _WinStat extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: colorScheme.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
         ),
       ],
     );

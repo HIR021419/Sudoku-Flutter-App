@@ -4,5 +4,5 @@ enum TileStateEnum {
   highlighted,
   given,
   error,
-  guessed
+  guessed;
 }
