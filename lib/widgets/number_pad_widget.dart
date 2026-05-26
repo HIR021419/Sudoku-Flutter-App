@@ -23,7 +23,7 @@ class NumberPadWidget extends StatelessWidget {
             fillMode: c.fillMode,
             notesMode: c.notesMode,
             activeNumber: c.activeNumber,
-            completedMask: _completedNumbersMask(c),
+            completedMask: c.completedNumbersMask,
           ),
         );
     final visibleNumbers = [
@@ -69,16 +69,6 @@ class NumberPadWidget extends StatelessWidget {
       },
     );
   }
-}
-
-int _completedNumbersMask(GameController controller) {
-  int mask = 0;
-  for (int number = 1; number <= 9; number++) {
-    if (controller.isNumberCompleted(number)) {
-      mask |= 1 << (number - 1);
-    }
-  }
-  return mask;
 }
 
 class _NumberButton extends StatelessWidget {

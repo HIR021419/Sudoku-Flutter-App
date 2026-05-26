@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/controllers/game_controller.dart';
+import 'package:sudoku/utils/board_geometry.dart';
 
 typedef _TileVm = ({
   int value,
@@ -42,8 +43,8 @@ class TileWidget extends StatelessWidget {
       ),
     );
 
-    final row = index ~/ 9 + 1;
-    final col = index % 9 + 1;
+    final row = rowOf(index) + 1;
+    final col = colOf(index) + 1;
     final semanticLabel = _buildSemanticLabel(l10n, row, col, vm);
 
     return Material(

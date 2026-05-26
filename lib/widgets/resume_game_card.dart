@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sudoku/entities/type/difficulty_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
+import 'package:sudoku/utils/game_formatters.dart';
 
 class ResumeGameCard extends StatelessWidget {
   const ResumeGameCard({
@@ -18,7 +19,7 @@ class ResumeGameCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
-    final difficulty = _parseDifficulty(saved['difficulty']);
+    final difficulty = DifficultyEnum.tryParse(saved['difficulty'] as String?);
     final elapsedMs = (saved['elapsedMs'] as num?)?.toInt() ?? 0;
     final elapsed = Duration(milliseconds: elapsedMs);
 
@@ -86,7 +87,7 @@ class ResumeGameCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 3),
                         Text(
-                          _formatDuration(elapsed),
+                          formatDuration(elapsed),
                           style: TextStyle(
                             fontSize: 13,
                             color: colorScheme.onPrimaryContainer
@@ -111,23 +112,4 @@ class ResumeGameCard extends StatelessWidget {
     );
   }
 
-  DifficultyEnum? _parseDifficulty(dynamic raw) {
-    if (raw is! String) return null;
-    for (final d in DifficultyEnum.values) {
-      if (d.name == raw) return d;
-    }
-    return null;
-  }
-
-  String _formatDuration(Duration d) {
-    final hours = d.inHours;
-    final minutes = d.inMinutes % 60;
-    final seconds = d.inSeconds % 60;
-    final mm = minutes.toString().padLeft(2, '0');
-    final ss = seconds.toString().padLeft(2, '0');
-    if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:$mm:$ss';
-    }
-    return '$mm:$ss';
-  }
 }

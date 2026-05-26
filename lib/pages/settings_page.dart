@@ -123,34 +123,32 @@ class SettingsPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                RadioListTile<ValidationModeEnum>(
-                  title: Text(l10n.validationModeAutoCheck),
-                  subtitle: Text(l10n.validationModeAutoCheckDescription),
-                  value: ValidationModeEnum.autoCheck,
+                RadioGroup<ValidationModeEnum>(
                   groupValue: settings.validationMode,
                   onChanged: (value) {
                     if (value != null) controller.setValidationMode(value);
                   },
-                ),
-                const Divider(height: 1),
-                RadioListTile<ValidationModeEnum>(
-                  title: Text(l10n.validationModeValidate),
-                  subtitle: Text(l10n.validationModeValidateDescription),
-                  value: ValidationModeEnum.validate,
-                  groupValue: settings.validationMode,
-                  onChanged: (value) {
-                    if (value != null) controller.setValidationMode(value);
-                  },
-                ),
-                const Divider(height: 1),
-                RadioListTile<ValidationModeEnum>(
-                  title: Text(l10n.validationModeNoCheck),
-                  subtitle: Text(l10n.validationModeNoCheckDescription),
-                  value: ValidationModeEnum.noCheck,
-                  groupValue: settings.validationMode,
-                  onChanged: (value) {
-                    if (value != null) controller.setValidationMode(value);
-                  },
+                  child: Column(
+                    children: [
+                      RadioListTile<ValidationModeEnum>(
+                        title: Text(l10n.validationModeAutoCheck),
+                        subtitle: Text(l10n.validationModeAutoCheckDescription),
+                        value: ValidationModeEnum.autoCheck,
+                      ),
+                      const Divider(height: 1),
+                      RadioListTile<ValidationModeEnum>(
+                        title: Text(l10n.validationModeValidate),
+                        subtitle: Text(l10n.validationModeValidateDescription),
+                        value: ValidationModeEnum.validate,
+                      ),
+                      const Divider(height: 1),
+                      RadioListTile<ValidationModeEnum>(
+                        title: Text(l10n.validationModeNoCheck),
+                        subtitle: Text(l10n.validationModeNoCheckDescription),
+                        value: ValidationModeEnum.noCheck,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sudoku/entities/type/validation_mode_enum.dart';
 import 'package:sudoku/repositories/game_repository.dart';
 import 'package:sudoku/entities/type/difficulty_enum.dart';
+import 'package:sudoku/utils/board_geometry.dart';
 import 'package:sudoku/entities/game_session.dart';
 import 'package:sudoku/models/game_ui_notifier.dart';
 
@@ -36,9 +37,7 @@ class GameController extends ChangeNotifier {
 
   // --- Accesseurs ---
 
-  bool get isInitialized => _session != null;
   GameSession get session => _session!;
-  GameUiNotifier get uiState => _ui;
 
   DifficultyEnum get difficulty => session.difficulty;
   bool get isComplete => session.isComplete;
@@ -54,6 +53,16 @@ class GameController extends ChangeNotifier {
   bool get fillMode => _ui.fillMode;
   int? get activeNumber => _ui.activeNumber;
 
+  /// Masque de bits des nombres déjà complétés (bit N-1 = nombre N).
+  /// Exposé ici pour éviter que la logique métier migre dans les widgets.
+  int get completedNumbersMask {
+    int mask = 0;
+    for (int n = 1; n <= 9; n++) {
+      if (session.isNumberCompleted(n)) mask |= 1 << (n - 1);
+    }
+    return mask;
+  }
+
   // --- Tile state queries ---
 
   int valueAt(int index) => session.valueAt(index);
@@ -66,9 +75,9 @@ class GameController extends ChangeNotifier {
   bool isRelated(int index) {
     final sel = _ui.selectedIndex;
     if (sel == null || index == sel) return false;
-    final r = index ~/ 9, c = index % 9;
-    final sr = sel ~/ 9, sc = sel % 9;
-    return r == sr || c == sc || (r ~/ 3 == sr ~/ 3 && c ~/ 3 == sc ~/ 3);
+    return rowOf(index) == rowOf(sel) ||
+        colOf(index) == colOf(sel) ||
+        boxOf(index) == boxOf(sel);
   }
 
   bool isSameValue(int index) {
@@ -82,15 +91,6 @@ class GameController extends ChangeNotifier {
   }
 
   // --- Initialisation ---
-
-  void initNewGame(DifficultyEnum diff) {
-    _session = GameSession.newGame(diff);
-    _saveEnabled = true;
-    _ui.reset();
-    _lastPersistedUi = (notesMode: false, fillMode: false, activeNumber: null);
-    _scheduleSave();
-    notifyListeners();
-  }
 
   /// Initialise depuis des données déjà générées (typiquement par un isolate).
   /// Évite de bloquer le thread principal sur la génération.
@@ -147,11 +147,7 @@ class GameController extends ChangeNotifier {
               _ui.activeNumber!,
               validationMode: validationMode,
             );
-      if (changed) {
-        _syncCompletedNumberState();
-        _scheduleSave();
-        notifyListeners();
-      }
+      _commitMutation(changed);
     }
 
     _ui.select(index);
@@ -168,33 +164,19 @@ class GameController extends ChangeNotifier {
     final changed = _ui.notesMode
         ? session.toggleNote(idx, number)
         : session.applyValue(idx, number, validationMode: validationMode);
-    if (changed) {
-      _syncCompletedNumberState();
-      _scheduleSave();
-      notifyListeners();
-    }
+    _commitMutation(changed);
   }
 
   void eraseCell() {
     final idx = _ui.selectedIndex;
     if (idx == null) return;
-    if (session.eraseCell(idx)) {
-      _syncCompletedNumberState();
-      _scheduleSave();
-      notifyListeners();
-    }
+    _commitMutation(session.eraseCell(idx));
   }
 
   void toggleNotesMode() => _ui.toggleNotesMode();
   void toggleFillMode() => _ui.toggleFillMode();
 
-  void undo() {
-    if (session.undo()) {
-      _syncCompletedNumberState();
-      _scheduleSave();
-      notifyListeners();
-    }
-  }
+  void undo() => _commitMutation(session.undo());
 
   void hint() {
     final target = session.applyHint(_random);
@@ -265,6 +247,17 @@ class GameController extends ChangeNotifier {
     } catch (e, st) {
       debugPrint('GameController._flushSave failed: $e\n$st');
     }
+  }
+
+  // --- Helpers privés ---
+
+  /// Pipeline commun à toutes les mutations domaine :
+  /// sync du numéro actif → schedule save → notifyListeners.
+  void _commitMutation(bool changed) {
+    if (!changed) return;
+    _syncCompletedNumberState();
+    _scheduleSave();
+    notifyListeners();
   }
 
   void _syncCompletedNumberState() {

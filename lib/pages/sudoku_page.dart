@@ -1,16 +1,13 @@
-import 'dart:math' as math;
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
 import 'package:sudoku/controllers/game_controller.dart';
 import 'package:sudoku/controllers/settings_controller.dart';
 import 'package:sudoku/controllers/stats_controller.dart';
-import 'package:sudoku/widgets/game_toolbar_widget.dart';
-import 'package:sudoku/widgets/number_pad_widget.dart';
-import 'package:sudoku/widgets/sudoku_grid_widget.dart';
+import 'package:sudoku/pages/sudoku_dialogs.dart';
+import 'package:sudoku/pages/sudoku_layout.dart';
 
 class SudokuPage extends StatefulWidget {
   const SudokuPage({super.key, required this.controller});
@@ -72,10 +69,8 @@ class _SudokuPageState extends State<SudokuPage>
   void _onControllerChanged() {
     if (!mounted) return;
 
-    final hapticEnabled = context
-        .read<SettingsController>()
-        .settings
-        .hapticEnabled;
+    final hapticEnabled =
+        context.read<SettingsController>().settings.hapticEnabled;
 
     final currentErrors = _controller.errorCount;
     if (currentErrors > _lastErrorCount) {
@@ -106,72 +101,17 @@ class _SudokuPageState extends State<SudokuPage>
   }
 
   void _showWinDialog() {
-    final duration = _controller.completedDuration ?? Duration.zero;
-    final errors = _controller.errorCount;
-    final hints = _controller.hintsUsed;
-    final pageContext = context;
-    final l10n = AppLocalizations.of(pageContext);
-    final difficultyLabel = _controller.difficulty.localizedLabel(pageContext);
-
-    showDialog(
-      context: pageContext,
-      barrierDismissible: false,
-      builder: (dialogContext) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          icon: Icon(
-            Icons.emoji_events,
-            color: Theme.of(dialogContext).colorScheme.primary,
-            size: 48,
-          ),
-          title: Text(l10n.winTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.winSubtitle(difficultyLabel),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _WinStat(
-                    icon: Icons.timer_outlined,
-                    label: l10n.winStatTime,
-                    value: _formatDuration(duration),
-                  ),
-                  _WinStat(
-                    icon: Icons.error_outline_rounded,
-                    label: l10n.winStatErrors,
-                    value: '$errors',
-                  ),
-                  _WinStat(
-                    icon: Icons.lightbulb_outline_rounded,
-                    label: l10n.winStatHints,
-                    value: '$hints',
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                if (Navigator.of(pageContext).canPop()) {
-                  Navigator.of(pageContext).pop();
-                }
-              },
-              child: Text(l10n.winBackHome),
-            ),
-          ],
-        ),
-      ),
+    showWinDialog(
+      context,
+      duration: _controller.completedDuration ?? Duration.zero,
+      errors: _controller.errorCount,
+      hints: _controller.hintsUsed,
+      difficultyLabel: _controller.difficulty.localizedLabel(context),
+      onBackHome: () {
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      },
     );
   }
 
@@ -188,7 +128,7 @@ class _SudokuPageState extends State<SudokuPage>
       return;
     }
 
-    final shouldAbandon = await _showAbandonDialog();
+    final shouldAbandon = await showAbandonDialog(context);
     if (!mounted || !shouldAbandon) {
       _exitFlowInProgress = false;
       return;
@@ -199,40 +139,6 @@ class _SudokuPageState extends State<SudokuPage>
       Navigator.of(context).pop();
     }
     _exitFlowInProgress = false;
-  }
-
-  Future<bool> _showAbandonDialog() async {
-    final l10n = AppLocalizations.of(context);
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.leaveGameTitle),
-        content: Text(l10n.leaveGameMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.leaveGameCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.leaveGameConfirm),
-          ),
-        ],
-      ),
-    );
-    return result ?? false;
-  }
-
-  String _formatDuration(Duration d) {
-    final hours = d.inHours;
-    final minutes = d.inMinutes % 60;
-    final seconds = d.inSeconds % 60;
-    final mm = minutes.toString().padLeft(2, '0');
-    final ss = seconds.toString().padLeft(2, '0');
-    if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:$mm:$ss';
-    }
-    return '$mm:$ss';
   }
 
   @override
@@ -253,131 +159,12 @@ class _SudokuPageState extends State<SudokuPage>
               onPressed: _handleExitAttempt,
             ),
           ),
-          body: Stack(
-            children: [
-              SafeArea(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isLandscape =
-                        constraints.maxWidth > constraints.maxHeight * 1.1;
-                    return Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: isLandscape ? _buildLandscape() : _buildPortrait(),
-                    );
-                  },
-                ),
-              ),
-              Align(
-                alignment: Alignment.topCenter,
-                child: ConfettiWidget(
-                  confettiController: _confettiController,
-                  blastDirection: math.pi / 2,
-                  blastDirectionality: BlastDirectionality.explosive,
-                  maxBlastForce: 25,
-                  minBlastForce: 10,
-                  emissionFrequency: 0.05,
-                  numberOfParticles: 25,
-                  gravity: 0.25,
-                  shouldLoop: false,
-                  colors: const [
-                    Color(0xFF4F46E5),
-                    Color(0xFF3B82F6),
-                    Color(0xFFF59E0B),
-                    Color(0xFF10B981),
-                    Color(0xFFEC4899),
-                  ],
-                ),
-              ),
-            ],
+          body: SudokuGameLayout(
+            shakeController: _shakeController,
+            confettiController: _confettiController,
           ),
         ),
       ),
-    );
-  }
-
-  Widget _shakingGrid() {
-    return AnimatedBuilder(
-      animation: _shakeController,
-      builder: (context, child) {
-        final t = _shakeController.value;
-        final dx = t == 0 ? 0.0 : math.sin(t * 4 * math.pi) * (1 - t) * 8;
-        return Transform.translate(offset: Offset(dx, 0), child: child);
-      },
-      child: const AspectRatio(aspectRatio: 1, child: SudokuGridWidget()),
-    );
-  }
-
-  Widget _buildPortrait() {
-    return Column(
-      children: [
-        Expanded(child: Center(child: _shakingGrid())),
-        const SizedBox(height: 16),
-        const GameToolbarWidget(),
-        const SizedBox(height: 12),
-        const NumberPadWidget(),
-      ],
-    );
-  }
-
-  Widget _buildLandscape() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(flex: 5, child: Center(child: _shakingGrid())),
-        const SizedBox(width: 16),
-        const Expanded(
-          flex: 4,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GameToolbarWidget(),
-              SizedBox(height: 20),
-              NumberPadWidget(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WinStat extends StatelessWidget {
-  const _WinStat({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: colorScheme.onPrimaryContainer, size: 22),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
-        ),
-      ],
     );
   }
 }

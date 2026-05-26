@@ -1,7 +1,8 @@
 import 'dart:math';
 import 'package:sudoku/entities/type/difficulty_enum.dart';
-import 'package:sudoku/entities/type/undo_type.dart';
+import 'package:sudoku/entities/undo_cell.dart';
 import 'package:sudoku/entities/type/validation_mode_enum.dart';
+import 'package:sudoku/utils/board_geometry.dart';
 import 'package:sudoku/utils/migration_utils.dart';
 import 'package:sudoku/utils/sudoku_utils.dart';
 
@@ -83,11 +84,9 @@ class GameSession {
       final migratedJson = MigrationUtils.migrateToLatest(json);
       if (migratedJson == null) return null;
 
-      final diffName = migratedJson['difficulty'] as String?;
-      if (diffName == null) return null;
-      final difficulty = DifficultyEnum.values
-          .where((d) => d.name == diffName)
-          .firstOrNull;
+      final difficulty = DifficultyEnum.tryParse(
+        migratedJson['difficulty'] as String?,
+      );
       if (difficulty == null) return null;
 
       final solution = _readIntList(migratedJson['solution']);
@@ -127,21 +126,8 @@ class GameSession {
           if (cellsRaw is! List) return null;
           final entryCells = <UndoCell>[];
           for (final cell in cellsRaw) {
-            if (cell is! Map) return null;
-            final i = (cell['i'] as num?)?.toInt();
-            final v = (cell['v'] as num?)?.toInt();
-            final nList = _readIntList(cell['n']);
-            if (i == null || i < 0 || i >= 81) return null;
-            if (v == null || v < 0 || v > 9) return null;
-            if (nList == null) return null;
-            if (!nList.every((x) => x >= 1 && x <= 9)) return null;
-            entryCells.add((
-              index: i,
-              value: v,
-              notes: nList.toSet(),
-              hasVisibleError: cell['e'] == true,
-              isValidatedCorrect: cell['ok'] == true,
-            ));
+            if (cell is! Map<String, dynamic>) return null;
+            entryCells.add(UndoCell.fromJson(cell));
           }
           if (entryCells.isNotEmpty) undoStack.add(entryCells);
         }
@@ -255,21 +241,7 @@ class GameSession {
       'givens': givens.toList(),
       'notes': _notes.map((k, v) => MapEntry(k.toString(), v.toList())),
       'undoStack': _undoStack
-          .map(
-            (entry) => {
-              'cells': entry
-                  .map(
-                    (c) => {
-                      'i': c.index,
-                      'v': c.value,
-                      'n': c.notes.toList(),
-                      'e': c.hasVisibleError,
-                      'ok': c.isValidatedCorrect,
-                    },
-                  )
-                  .toList(),
-            },
-          )
+          .map((entry) => {'cells': entry.map((c) => c.toJson()).toList()})
           .toList(),
       'revealedErrors': _revealedErrors.toList(),
       'validatedCorrect': _validatedCorrect.toList(),
@@ -325,7 +297,7 @@ class GameSession {
     if (userGrid[index] != 0) return false;
 
     final entry = <UndoCell>[
-      (
+      UndoCell(
         index: index,
         value: userGrid[index],
         notes: Set<int>.from(_notes[index] ?? const {}),
@@ -353,7 +325,7 @@ class GameSession {
       return false;
     }
     final entry = <UndoCell>[
-      (
+      UndoCell(
         index: index,
         value: userGrid[index],
         notes: Set<int>.from(_notes[index] ?? const {}),
@@ -463,42 +435,21 @@ class GameSession {
   // --- Helpers privés ---
 
   /// Snapshot la cellule cible + toutes les cellules de la ligne/colonne/bloc
-  /// dont les notes contiennent `value` (qui vont être nettoyées par _autoCleanNotes).
+  /// dont les notes contiennent [value] (qui vont être nettoyées par _autoCleanNotes).
   UndoEntry _snapshotForValue(int index, int value) {
-    final entry = <UndoCell>[
-      (
-        index: index,
-        value: userGrid[index],
-        notes: Set<int>.from(_notes[index] ?? const {}),
-        hasVisibleError: _revealedErrors.contains(index),
-        isValidatedCorrect: _validatedCorrect.contains(index),
-      ),
-    ];
-    final row = index ~/ 9;
-    final col = index % 9;
-    final boxRow = (row ~/ 3) * 3;
-    final boxCol = (col ~/ 3) * 3;
-    final touched = <int>{};
-    for (int i = 0; i < 9; i++) {
-      touched.add(row * 9 + i);
-      touched.add(i * 9 + col);
-    }
-    for (int r = 0; r < 3; r++) {
-      for (int c = 0; c < 3; c++) {
-        touched.add((boxRow + r) * 9 + (boxCol + c));
-      }
-    }
-    touched.remove(index);
-    for (final idx in touched) {
+    UndoCell _snapshot(int idx) => UndoCell(
+      index: idx,
+      value: userGrid[idx],
+      notes: Set<int>.from(_notes[idx] ?? const {}),
+      hasVisibleError: _revealedErrors.contains(idx),
+      isValidatedCorrect: _validatedCorrect.contains(idx),
+    );
+
+    final entry = <UndoCell>[_snapshot(index)];
+    for (final idx in peerIndexesOf(index)) {
       final cellNotes = _notes[idx];
       if (cellNotes != null && cellNotes.contains(value)) {
-        entry.add((
-          index: idx,
-          value: userGrid[idx],
-          notes: Set<int>.from(cellNotes),
-          hasVisibleError: _revealedErrors.contains(idx),
-          isValidatedCorrect: _validatedCorrect.contains(idx),
-        ));
+        entry.add(_snapshot(idx));
       }
     }
     return entry;
@@ -510,11 +461,6 @@ class GameSession {
   }
 
   void _autoCleanNotes(int index, int value) {
-    final row = index ~/ 9;
-    final col = index % 9;
-    final boxRow = (row ~/ 3) * 3;
-    final boxCol = (col ~/ 3) * 3;
-
     void cleanAt(int idx) {
       final set = _notes[idx];
       if (set == null) return;
@@ -522,14 +468,9 @@ class GameSession {
       if (set.isEmpty) _notes.remove(idx);
     }
 
-    for (int i = 0; i < 9; i++) {
-      cleanAt(row * 9 + i);
-      cleanAt(i * 9 + col);
-    }
-    for (int r = 0; r < 3; r++) {
-      for (int c = 0; c < 3; c++) {
-        cleanAt((boxRow + r) * 9 + (boxCol + c));
-      }
+    cleanAt(index);
+    for (final idx in peerIndexesOf(index)) {
+      cleanAt(idx);
     }
   }
 

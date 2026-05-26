@@ -5,6 +5,7 @@ import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
 import 'package:sudoku/entities/stats.dart';
 import 'package:sudoku/controllers/stats_controller.dart';
+import 'package:sudoku/utils/game_formatters.dart';
 
 class StatsCardWidget extends StatelessWidget {
   const StatsCardWidget({super.key});
@@ -134,7 +135,7 @@ class _DifficultyCell extends StatelessWidget {
               const SizedBox(width: 3),
               Text(
                 bestTime != null
-                    ? _formatDuration(bestTime)
+                    ? formatDuration(bestTime)
                     : l10n.statsNoRecord,
                 style: TextStyle(
                   fontSize: 12,
@@ -152,13 +153,4 @@ class _DifficultyCell extends StatelessWidget {
     );
   }
 
-  String _formatDuration(Duration d) {
-    final h = d.inHours;
-    final m = d.inMinutes % 60;
-    final s = d.inSeconds % 60;
-    final mm = m.toString().padLeft(2, '0');
-    final ss = s.toString().padLeft(2, '0');
-    if (h > 0) return '${h.toString().padLeft(2, '0')}:$mm:$ss';
-    return '$mm:$ss';
-  }
 }

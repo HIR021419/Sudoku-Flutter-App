@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:sudoku/entities/type/difficulty_enum.dart';
+import 'package:sudoku/utils/board_geometry.dart';
 
 /// Données d'un puzzle généré.
 /// Fonction top-level pour pouvoir être passée à `compute()` et exécutée dans un isolate.
@@ -38,18 +39,8 @@ class SudokuUtils {
   }
 
   static bool _isValid(List<int> grid, int index, int value) {
-    final row = index ~/ 9;
-    final col = index % 9;
-    for (int i = 0; i < 9; i++) {
-      if (grid[row * 9 + i] == value) return false;
-      if (grid[i * 9 + col] == value) return false;
-    }
-    final startRow = (row ~/ 3) * 3;
-    final startCol = (col ~/ 3) * 3;
-    for (int r = 0; r < 3; r++) {
-      for (int c = 0; c < 3; c++) {
-        if (grid[(startRow + r) * 9 + (startCol + c)] == value) return false;
-      }
+    for (final peer in peerIndexesOf(index)) {
+      if (grid[peer] == value) return false;
     }
     return true;
   }
