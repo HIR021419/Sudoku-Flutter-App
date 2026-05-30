@@ -21,6 +21,25 @@
   "toolbarFast": "Fast",
   "toolbarHint": "Hint",
   "toolbarValidate": "Validate",
+  "toolbarActiveSuffix": "{label} (active)",
+  "@toolbarActiveSuffix": {
+    "description": "Semantic label for a toolbar button when active",
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "gridSemanticLabel": "Sudoku grid 9 by 9",
+  "@gridSemanticLabel": {
+    "description": "Semantic label announcing the Sudoku grid"
+  },
+  "winStatSemanticLabel": "{label}: {value}",
+  "@winStatSemanticLabel": {
+    "description": "Semantic label combining a stat label and its value",
+    "placeholders": {
+      "label": { "type": "String" },
+      "value": { "type": "String" }
+    }
+  },
   "savedCorruptedSnackbar": "Save corrupted, game cleared.",
   "statsTitle": "Statistics",
   "statsBestTime": "Best time",

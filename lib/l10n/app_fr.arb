@@ -34,6 +34,25 @@
   "toolbarFast": "Rapide",
   "toolbarHint": "Indice",
   "toolbarValidate": "Vérifier",
+  "toolbarActiveSuffix": "{label} (actif)",
+  "@toolbarActiveSuffix": {
+    "description": "Semantic label for a toolbar button when active",
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "gridSemanticLabel": "Grille Sudoku 9 par 9",
+  "@gridSemanticLabel": {
+    "description": "Semantic label announcing the Sudoku grid"
+  },
+  "winStatSemanticLabel": "{label} : {value}",
+  "@winStatSemanticLabel": {
+    "description": "Semantic label combining a stat label and its value",
+    "placeholders": {
+      "label": { "type": "String" },
+      "value": { "type": "String" }
+    }
+  },
   "savedCorruptedSnackbar": "Sauvegarde corrompue, partie effacée.",
   "statsTitle": "Statistiques",
   "statsBestTime": "Meilleur temps",

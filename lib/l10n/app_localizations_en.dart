@@ -76,6 +76,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolbarValidate => 'Validate';
 
   @override
+  String toolbarActiveSuffix(String label) {
+    return '$label (active)';
+  }
+
+  @override
+  String get gridSemanticLabel => 'Sudoku grid 9 by 9';
+
+  @override
+  String winStatSemanticLabel(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
   String get savedCorruptedSnackbar => 'Save corrupted, game cleared.';
 
   @override

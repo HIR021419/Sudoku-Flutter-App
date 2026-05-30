@@ -224,6 +224,24 @@ abstract class AppLocalizations {
   /// **'Vérifier'**
   String get toolbarValidate;
 
+  /// Semantic label for a toolbar button when active
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} (actif)'**
+  String toolbarActiveSuffix(String label);
+
+  /// Semantic label announcing the Sudoku grid
+  ///
+  /// In fr, this message translates to:
+  /// **'Grille Sudoku 9 par 9'**
+  String get gridSemanticLabel;
+
+  /// Semantic label combining a stat label and its value
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} : {value}'**
+  String winStatSemanticLabel(String label, String value);
+
   /// No description provided for @savedCorruptedSnackbar.
   ///
   /// In fr, this message translates to:

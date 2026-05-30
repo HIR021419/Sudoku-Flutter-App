@@ -1,5 +1,70 @@
 # Plan d'implémentation — Refactor Sudoku App
-_Dernière mise à jour : 2026-05-30 — UI tweak HomePage (settings sticky)_
+_Dernière mise à jour : 2026-05-30 — CI AAB Play Store + A11y + UI HomePage_
+
+---
+
+## 🚀 CI 2026-05-30 — Switch APK → AAB pour Play Store
+
+### Contexte
+Objectif : préparer la première publication Play Store (test interne).
+- L'AAB devient le **seul** artifact produit automatiquement (sur tag `v*`).
+- L'APK reste disponible mais **uniquement** via déclenchement manuel —
+  sert au sideload (tests hors Play Store, distribution directe).
+- La toute première publication Play Store doit être faite à la main (Play
+  Console refuse l'upload API tant qu'aucune release n'a été publiée
+  manuellement) — un run `workflow_dispatch` avec `build_aab=true` produit
+  l'AAB nécessaire.
+
+### Changements
+- `.github/workflows/ci.yml` :
+  - `workflow_dispatch` enrichi avec deux booléens `build_apk` (défaut
+    true) et `build_aab` (défaut false) + `version_suffix`.
+  - Job `build-signed-apk` : trigger uniquement `workflow_dispatch &&
+    build_apk`. Plus de GitHub Release.
+  - Nouveau job `build-signed-aab` : trigger tag `v*` OU
+    `workflow_dispatch && build_aab`. Sur tag, attache l'AAB à la
+    GitHub Release.
+- `docs/RELEASE.md` : refonte complète — tableau du flow, procédure de
+  récup manuelle, étapes pour la première publication Play Store,
+  roadmap upload auto via `r0adkll/upload-google-play-action`.
+
+### Reste à faire
+- Run manuel `build_aab=true` → récupérer l'artifact → upload sur Play
+  Console (test interne) → publier la 1ʳᵉ version à la main.
+- Plus tard : créer un service account Play Console, stocker la clé en
+  secret `PLAY_SERVICE_ACCOUNT_JSON`, ajouter un step
+  `r0adkll/upload-google-play-action` au job `build-signed-aab`
+  (conditionné à `startsWith(github.ref, 'refs/tags/v')`).
+
+---
+
+## ♿ A11y 2026-05-30 — Semantics i18n (3 quick wins)
+
+### Contexte
+Audit a11y du #3 du plan d'amélioration. Couverture déjà bonne (tile,
+number pad, toolbar) mais 3 trous identifiés et corrigés.
+
+### Changements
+- `lib/l10n/app_{en,fr}.arb` + fichiers générés `app_localizations*.dart` :
+  - Nouvelle clé `toolbarActiveSuffix(label)` — remplace le hard-code FR
+    `'$label (actif)'`.
+  - Nouvelle clé `gridSemanticLabel` — annonce "Grille Sudoku 9 par 9".
+  - Nouvelle clé `winStatSemanticLabel(label, value)` — combine label+value
+    en un seul nœud a11y.
+- `lib/widgets/game_toolbar_widget.dart` : `_ToolbarButton` utilise
+  `l10n.toolbarActiveSuffix(label)` au lieu du hard-code.
+- `lib/widgets/sudoku_dialogs.dart` : `WinStat` wrappé dans `Semantics` avec
+  `excludeSemantics: true` → lecteur d'écran lit "Temps : 02:34" au lieu de
+  3 messages séparés. Icône traitée comme décorative.
+- `lib/widgets/sudoku_grid_widget.dart` : `Semantics(container: true,
+  label: gridSemanticLabel)` autour de la grille — annonce globale.
+
+### Reste à faire
+- Tester sur device réel avec TalkBack (Android) et VoiceOver (iOS).
+- Vérifier l'ordre de lecture (traversal) du `Wrap` de la toolbar sur les
+  petits écrans (2 rangs) — peut nécessiter `Semantics(sortKey: …)`.
+- Régénérer les `.dart` l10n via `flutter gen-l10n` côté dev pour
+  s'assurer que la version generée colle bien à l'édition manuelle.
 
 ---
 

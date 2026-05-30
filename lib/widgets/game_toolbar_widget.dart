@@ -107,6 +107,7 @@ class _ToolbarButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final bg = isActive
         ? colorScheme.primaryContainer
         : colorScheme.surfaceContainerHighest;
@@ -115,7 +116,7 @@ class _ToolbarButton extends StatelessWidget {
         : colorScheme.onSurfaceVariant;
 
     return Semantics(
-      label: isActive ? '$label (actif)' : label,
+      label: isActive ? l10n.toolbarActiveSuffix(label) : label,
       button: true,
       child: Material(
         color: bg,
