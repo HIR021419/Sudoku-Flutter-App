@@ -144,7 +144,7 @@ class SudokuPage extends HookConsumerWidget {
 
       final hapticEnabled =
           ref.read(settingsNotifierProvider).valueOrNull?.hapticEnabled ??
-              const Settings().hapticEnabled;
+          const Settings().hapticEnabled;
 
       final currentErrors = next.session.errorCount;
       if (currentErrors > lastErrorCount.value) {
@@ -160,10 +160,9 @@ class SudokuPage extends HookConsumerWidget {
         confettiController.play();
         final duration = next.completedDuration;
         if (duration != null) {
-          ref.read(statsNotifierProvider.notifier).recordWin(
-                next.session.difficulty,
-                duration,
-              );
+          ref
+              .read(statsNotifierProvider.notifier)
+              .recordWin(next.session.difficulty, duration);
         }
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted &&
@@ -182,9 +181,7 @@ class SudokuPage extends HookConsumerWidget {
     final state = ref.watch(gameNotifierProvider);
     if (state == null) {
       // Frame initiale, bootstrap en cours.
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return PopScope(

@@ -61,11 +61,7 @@ class GameNotifier extends _$GameNotifier {
     );
     _runtime.startFresh();
     _saveEnabled = true;
-    _lastPersistedUi = (
-      notesMode: false,
-      fillMode: false,
-      activeNumber: null,
-    );
+    _lastPersistedUi = (notesMode: false, fillMode: false, activeNumber: null);
     state = GameState(session: session);
     _scheduleSave();
   }
@@ -125,16 +121,30 @@ class GameNotifier extends _$GameNotifier {
 
     if (ui.fillMode && session.valueAt(index) != 0) {
       _setUi(ui.copyWith(activeNumber: session.valueAt(index)));
-    } else if (ui.fillMode && ui.activeNumber != null) {
+      _selectInternal(index);
+      return;
+    }
+
+    if (ui.fillMode && ui.activeNumber != null) {
+      final active = ui.activeNumber!;
       final next = ui.notesMode
-          ? session.toggleNote(index, ui.activeNumber!)
+          ? session.toggleNote(index, active)
           : session.applyValue(
               index,
-              ui.activeNumber!,
+              active,
               validationMode: _validationMode,
             );
       _applySession(next);
+      // Si l'activeNumber vient d'être complété (mode valeur), _applySession
+      // l'a auto-avancé. La cellule fraîchement remplie contient désormais le
+      // chiffre devenu inactif — la sélectionner placerait un highlight sur
+      // un chiffre qu'on a quitté → on désélectionne à la place.
+      if (!ui.notesMode && next.isNumberCompleted(active)) {
+        _selectInternal(null);
+        return;
+      }
     }
+
     _selectInternal(index);
   }
 
@@ -179,10 +189,22 @@ class GameNotifier extends _$GameNotifier {
   void hint() {
     final s = state;
     if (s == null) return;
+    final active = s.ui.activeNumber;
     final result = s.session.applyHint(_random);
-    if (result.target == null) return;
+    final target = result.target;
+    if (target == null) return;
+    final placedValue = result.session.valueAt(target);
     _applySession(result.session);
-    _selectInternal(result.target);
+    // Même logique que onTileTap : si le hint vient de compléter
+    // l'activeNumber courant, la cible contient le chiffre devenu
+    // inactif → désélectionne plutôt que de pointer dessus.
+    if (active != null &&
+        placedValue == active &&
+        result.session.isNumberCompleted(active)) {
+      _selectInternal(null);
+      return;
+    }
+    _selectInternal(target);
   }
 
   void validateBoard() {

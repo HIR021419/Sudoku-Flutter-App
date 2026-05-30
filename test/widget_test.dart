@@ -40,8 +40,9 @@ void main() {
       ProviderScope(
         overrides: [
           gameRepositoryProvider.overrideWithValue(_InMemoryGameRepository()),
-          settingsRepositoryProvider
-              .overrideWithValue(_InMemoryMapRepository()),
+          settingsRepositoryProvider.overrideWithValue(
+            _InMemoryMapRepository(),
+          ),
           statsRepositoryProvider.overrideWithValue(_InMemoryMapRepository()),
         ],
         child: const SudokuApp(),

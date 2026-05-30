@@ -46,8 +46,7 @@ class NumberPadWidget extends ConsumerWidget {
                       ? const SizedBox.shrink()
                       : _NumberButton(
                           number: number,
-                          isActive:
-                              ui.fillMode && ui.activeNumber == number,
+                          isActive: ui.fillMode && ui.activeNumber == number,
                           isNotes: ui.notesMode,
                           colorScheme: colorScheme,
                           onTap: () => ref
@@ -104,8 +103,8 @@ class _NumberButton extends StatelessWidget {
       label: isNotes
           ? l10n.numberPadToggleNote(number)
           : (isActive
-              ? l10n.numberPadDeactivate(number)
-              : l10n.numberPadEnter(number)),
+                ? l10n.numberPadDeactivate(number)
+                : l10n.numberPadEnter(number)),
       button: true,
       child: Material(
         color: bg,

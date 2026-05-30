@@ -110,18 +110,12 @@ class _DifficultyCell extends StatelessWidget {
         children: [
           Text(
             difficulty.localizedLabel(context),
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
             l10n.statsGamesSolved(stats.gamesSolved),
-            style: TextStyle(
-              fontSize: 11,
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 6),
           Row(
@@ -151,5 +145,4 @@ class _DifficultyCell extends StatelessWidget {
       ),
     );
   }
-
 }

@@ -1,5 +1,55 @@
 # Plan d'implémentation — Refactor Sudoku App
-_Dernière mise à jour : 2026-05-30 — CI AAB Play Store + A11y + UI HomePage_
+_Dernière mise à jour : 2026-05-30 — Fix UX désélection fillMode + CI AAB + A11y_
+
+---
+
+## 🧹 UX 2026-05-30 — Scrollbar des notes masquée + dédup
+
+### Contexte
+La mini-grille de notes (3×3) rendue dans chaque cellule via
+`GridView.count` héritait de la `Scrollbar` matérielle par défaut de
+Flutter — visible sur desktop/web et au hover souris. Or les notes ne
+défilent jamais (`shrinkWrap: true`, `NeverScrollableScrollPhysics`).
+
+### Changements
+- `lib/utils/scroll_behaviors.dart` (nouveau) : `NoScrollbarBehavior`
+  public, extrait depuis la classe privée qui était dans
+  `home_page.dart`.
+- `lib/pages/home_page.dart` : import du behavior partagé, suppression
+  de la classe `_NoScrollbarBehavior` locale (dédup).
+- `lib/widgets/tile_widget.dart` : `_buildNotes` wrappé dans un
+  `ScrollConfiguration(behavior: NoScrollbarBehavior(), …)`.
+
+### Reste à faire
+- (rien) — vérifier visuellement qu'aucune barre fantôme ne traîne sur
+  les cellules avec notes (notamment en mode web/desktop).
+
+---
+
+## 🎯 UX 2026-05-30 — Désélection après complétion en fillMode
+
+### Contexte
+En `fillMode`, quand la dernière instance d'un nombre est placée, le
+notifier auto-avance `activeNumber` vers le prochain chiffre non
+complété (logique existante dans `_applySession`). Mais
+`onTileTap`/`hint` rappelaient ensuite `_selectInternal(index)` sur la
+case fraîchement remplie, qui contenait alors le chiffre tout juste
+**quitté** : le highlight de sélection bleu pollue la vue alors que
+l'attention doit aller sur le nouveau `activeNumber`.
+
+### Changements
+- `lib/controllers/game_notifier.dart` :
+  - `onTileTap` : refactoré en early-returns. En fillMode mode valeur,
+    si `next.isNumberCompleted(active)` après application, on appelle
+    `_selectInternal(null)` au lieu de `_selectInternal(index)`.
+  - `hint` : même garde — si la valeur révélée par l'indice complète
+    l'`activeNumber` courant, on désélectionne au lieu de pointer sur
+    la cible.
+
+### Reste à faire
+- (rien) — valider visuellement : en fillMode, placer le dernier 5,
+  l'auto-advance doit basculer sur 6 et **aucune** case bleue ne doit
+  rester sur le 5 venant d'être placé.
 
 ---
 

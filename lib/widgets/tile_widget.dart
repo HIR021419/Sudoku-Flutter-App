@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sudoku/controllers/game_notifier.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/utils/board_geometry.dart';
+import 'package:sudoku/utils/scroll_behaviors.dart';
 
 typedef _TileVm = ({
   int value,
@@ -53,7 +54,8 @@ class TileWidget extends ConsumerWidget {
         // isRelated : même ligne/col/box que la case sélectionnée.
         bool isRelated = false;
         if (selected != null && !isSelected) {
-          isRelated = rowOf(index) == rowOf(selected) ||
+          isRelated =
+              rowOf(index) == rowOf(selected) ||
               colOf(index) == colOf(selected) ||
               boxOf(index) == boxOf(selected);
         }
@@ -63,7 +65,8 @@ class TileWidget extends ConsumerWidget {
         final ref0 = ui.fillMode
             ? ui.activeNumber
             : (selected != null ? session.valueAt(selected) : null);
-        final isSameValue = ref0 != null &&
+        final isSameValue =
+            ref0 != null &&
             ref0 != 0 &&
             session.valueAt(index) == ref0 &&
             index != selected;
@@ -175,31 +178,38 @@ class TileWidget extends ConsumerWidget {
   }
 
   Widget _buildNotes(int notesMask, ColorScheme colorScheme) {
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 0,
-      crossAxisSpacing: 0,
-      children: List.generate(9, (i) {
-        final n = i + 1;
-        final present = notesMask & (1 << i) != 0;
-        return Center(
-          child: present
-              ? FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    n.toString(),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: colorScheme.onSurfaceVariant,
+    // ScrollConfiguration masque la scrollbar que Material affiche par défaut
+    // sur les Scrollable (visible notamment sur desktop/web et après hover
+    // souris) — la mini-grille de notes ne défile jamais (shrinkWrap +
+    // NeverScrollableScrollPhysics) donc l'indicateur n'a aucun sens.
+    return ScrollConfiguration(
+      behavior: const NoScrollbarBehavior(),
+      child: GridView.count(
+        crossAxisCount: 3,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: 0,
+        crossAxisSpacing: 0,
+        children: List.generate(9, (i) {
+          final n = i + 1;
+          final present = notesMask & (1 << i) != 0;
+          return Center(
+            child: present
+                ? FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      n.toString(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                )
-              : null,
-        );
-      }),
+                  )
+                : null,
+          );
+        }),
+      ),
     );
   }
 

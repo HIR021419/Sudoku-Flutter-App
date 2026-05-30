@@ -52,9 +52,7 @@ class _DifficultySelectorWidgetState extends State<DifficultySelectorWidget> {
             child: _DifficultyCard(
               difficulty: difficulty,
               isSelected: isSelected,
-              onTap: widget.isLoading
-                  ? null
-                  : () => setState(() => _index = i),
+              onTap: widget.isLoading ? null : () => setState(() => _index = i),
             ),
           );
         }),
@@ -104,8 +102,9 @@ class _DifficultyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
-    final borderColor =
-        isSelected ? colorScheme.primary : colorScheme.outlineVariant;
+    final borderColor = isSelected
+        ? colorScheme.primary
+        : colorScheme.outlineVariant;
     final bgColor = isSelected
         ? colorScheme.primaryContainer.withValues(alpha: 0.4)
         : colorScheme.surfaceContainerLow;
@@ -121,10 +120,7 @@ class _DifficultyCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: borderColor,
-              width: isSelected ? 2 : 1,
-            ),
+            border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
           ),
           child: Row(
             children: [
@@ -178,9 +174,9 @@ class _DifficultyCard extends StatelessWidget {
   }
 
   IconData _iconFor(DifficultyEnum d) => switch (d) {
-        DifficultyEnum.easy => Icons.sentiment_very_satisfied,
-        DifficultyEnum.medium => Icons.sentiment_satisfied,
-        DifficultyEnum.hard => Icons.sentiment_neutral,
-        DifficultyEnum.expert => Icons.local_fire_department,
-      };
+    DifficultyEnum.easy => Icons.sentiment_very_satisfied,
+    DifficultyEnum.medium => Icons.sentiment_satisfied,
+    DifficultyEnum.hard => Icons.sentiment_neutral,
+    DifficultyEnum.expert => Icons.local_fire_department,
+  };
 }

@@ -157,22 +157,23 @@ class SettingsPage extends ConsumerWidget {
                       children: [
                         RadioListTile<ValidationModeEnum>(
                           title: Text(l10n.validationModeAutoCheck),
-                          subtitle:
-                              Text(l10n.validationModeAutoCheckDescription),
+                          subtitle: Text(
+                            l10n.validationModeAutoCheckDescription,
+                          ),
                           value: ValidationModeEnum.autoCheck,
                         ),
                         const Divider(height: 1),
                         RadioListTile<ValidationModeEnum>(
                           title: Text(l10n.validationModeValidate),
-                          subtitle:
-                              Text(l10n.validationModeValidateDescription),
+                          subtitle: Text(
+                            l10n.validationModeValidateDescription,
+                          ),
                           value: ValidationModeEnum.validate,
                         ),
                         const Divider(height: 1),
                         RadioListTile<ValidationModeEnum>(
                           title: Text(l10n.validationModeNoCheck),
-                          subtitle:
-                              Text(l10n.validationModeNoCheckDescription),
+                          subtitle: Text(l10n.validationModeNoCheckDescription),
                           value: ValidationModeEnum.noCheck,
                         ),
                       ],

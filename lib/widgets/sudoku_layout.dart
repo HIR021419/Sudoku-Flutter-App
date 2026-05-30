@@ -32,8 +32,9 @@ class SudokuGameLayout extends StatelessWidget {
               final grid = _ShakingGrid(controller: shakeController);
               return Padding(
                 padding: const EdgeInsets.all(12),
-                child:
-                    isLandscape ? _buildLandscape(grid) : _buildPortrait(grid),
+                child: isLandscape
+                    ? _buildLandscape(grid)
+                    : _buildPortrait(grid),
               );
             },
           ),

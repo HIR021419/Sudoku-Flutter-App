@@ -5,7 +5,8 @@ import 'package:sudoku/utils/board_geometry.dart';
 /// Données d'un puzzle généré.
 /// Fonction top-level pour pouvoir être passée à `compute()` et exécutée dans un isolate.
 ({List<int> solution, List<int> givens}) generatePuzzleData(
-    DifficultyEnum difficulty) {
+  DifficultyEnum difficulty,
+) {
   final solution = SudokuUtils.generateGrid();
   final givens = SudokuUtils.generateGivens(solution, difficulty);
   return (solution: solution, givens: givens);
@@ -53,7 +54,9 @@ class SudokuUtils {
   /// résoluble de façon unique. Pour Expert, le nombre de givens peut être
   /// légèrement supérieur à `difficulty.clues` si l'unicité l'exige.
   static List<int> generateGivens(
-      List<int> solution, DifficultyEnum difficulty) {
+    List<int> solution,
+    DifficultyEnum difficulty,
+  ) {
     final puzzle = List<int>.from(solution);
     final positions = List<int>.generate(81, (i) => i)..shuffle(_random);
     final target = 81 - difficulty.clues; // nb de cases à retirer
@@ -71,7 +74,10 @@ class SudokuUtils {
       }
     }
 
-    return [for (int i = 0; i < 81; i++) if (puzzle[i] != 0) i];
+    return [
+      for (int i = 0; i < 81; i++)
+        if (puzzle[i] != 0) i,
+    ];
   }
 
   /// Compte le nombre de solutions distinctes de `grid`, en s'arrêtant dès

@@ -1,5 +1,1 @@
-enum ValidationModeEnum {
-  autoCheck,
-  validate,
-  noCheck;
-}
+enum ValidationModeEnum { autoCheck, validate, noCheck }

@@ -24,13 +24,8 @@ abstract class DifficultyStats with _$DifficultyStats {
   /// Nouveau snapshot après une victoire. `bestTime` mis à jour seulement
   /// si meilleur que l'actuel.
   DifficultyStats withWin(Duration time) {
-    final newBest = bestTime == null || time < bestTime!
-        ? time
-        : bestTime;
-    return DifficultyStats(
-      gamesSolved: gamesSolved + 1,
-      bestTime: newBest,
-    );
+    final newBest = bestTime == null || time < bestTime! ? time : bestTime;
+    return DifficultyStats(gamesSolved: gamesSolved + 1, bestTime: newBest);
   }
 }
 
@@ -59,8 +54,9 @@ abstract class Stats with _$Stats {
 
   Stats withWin(DifficultyEnum diff, Duration time) {
     final updated = Map<DifficultyEnum, DifficultyStats>.from(byDifficulty);
-    updated[diff] =
-        (byDifficulty[diff] ?? const DifficultyStats()).withWin(time);
+    updated[diff] = (byDifficulty[diff] ?? const DifficultyStats()).withWin(
+      time,
+    );
     return Stats(byDifficulty: updated);
   }
 }

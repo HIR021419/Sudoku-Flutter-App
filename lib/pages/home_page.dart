@@ -9,6 +9,7 @@ import 'package:sudoku/pages/settings_page.dart';
 import 'package:sudoku/pages/sudoku_page.dart';
 import 'package:sudoku/widgets/sudoku_dialogs.dart';
 import 'package:sudoku/providers/repositories.dart';
+import 'package:sudoku/utils/scroll_behaviors.dart';
 import 'package:sudoku/utils/sudoku_utils.dart';
 import 'package:sudoku/widgets/difficulty_selector_widget.dart';
 import 'package:sudoku/widgets/resume_game_card.dart';
@@ -34,9 +35,9 @@ class HomePage extends HookConsumerWidget {
       if (navigating.value) return;
       navigating.value = true;
       try {
-        await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => SudokuPage(init: init)),
-        );
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => SudokuPage(init: init)));
       } finally {
         navigating.value = false;
       }
@@ -94,7 +95,7 @@ class HomePage extends HookConsumerWidget {
           children: [
             Center(
               child: ScrollConfiguration(
-                behavior: const _NoScrollbarBehavior(),
+                behavior: const NoScrollbarBehavior(),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
@@ -177,14 +178,3 @@ class HomePage extends HookConsumerWidget {
   }
 }
 
-/// Masque la scrollbar du contenu principal de la HomePage.
-class _NoScrollbarBehavior extends ScrollBehavior {
-  const _NoScrollbarBehavior();
-
-  @override
-  Widget buildScrollbar(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) => child;
-}

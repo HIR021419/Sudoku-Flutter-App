@@ -41,8 +41,8 @@ class SudokuApp extends ConsumerWidget {
     // Avant d'avoir chargé les settings, on tombe sur les defaults — ça évite
     // un flicker de thème au boot. Le rebuild se fera dès que l'AsyncNotifier
     // a fini son load (quelques ms avec SharedPreferences).
-    final settings = ref.watch(settingsNotifierProvider).valueOrNull ??
-        const Settings();
+    final settings =
+        ref.watch(settingsNotifierProvider).valueOrNull ?? const Settings();
 
     return MaterialApp(
       title: 'Sudoku',

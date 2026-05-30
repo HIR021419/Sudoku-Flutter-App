@@ -20,9 +20,7 @@ Future<void> showWinDialog(
     builder: (dialogContext) => PopScope(
       canPop: false,
       child: AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         icon: Icon(
           Icons.emoji_events,
           color: Theme.of(dialogContext).colorScheme.primary,
@@ -140,10 +138,7 @@ class WinStat extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
           ),
         ],
       ),

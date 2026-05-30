@@ -15,8 +15,7 @@ class GameToolbarWidget extends ConsumerWidget {
     final ui = ref.watch(gameNotifierProvider.select((s) => s?.ui));
     final validationMode = ref.watch(
       settingsNotifierProvider.select(
-        (s) =>
-            s.valueOrNull?.validationMode ?? const Settings().validationMode,
+        (s) => s.valueOrNull?.validationMode ?? const Settings().validationMode,
       ),
     );
     final hintButtonVisible = ref.watch(
@@ -76,7 +75,7 @@ class GameToolbarWidget extends ConsumerWidget {
             : (buttons.length > 5 ? 3 : buttons.length);
         final buttonWidth =
             (constraints.maxWidth - spacing * (buttonsPerRow - 1)) /
-                buttonsPerRow;
+            buttonsPerRow;
 
         return Wrap(
           spacing: spacing,

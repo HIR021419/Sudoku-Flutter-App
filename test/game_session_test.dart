@@ -84,27 +84,34 @@ void main() {
       expect(session.isComplete, isTrue);
     });
 
-    test('legacy v1 saves migrate and keep visible errors / validated cells', () {
-      final raw = <String, dynamic>{
-        'schemaVersion': 1,
-        'difficulty': DifficultyEnum.easy.name,
-        'solution': _solution,
-        'userGrid': [2, ...List<int>.generate(79, (i) => _solution[i + 1]), 0],
-        'givens': List<int>.generate(79, (i) => i + 1),
-        'notes': <String, List<int>>{},
-        'undoStack': <Object>[],
-        'errorCount': 1,
-        'hintsUsed': 0,
-        'elapsedMs': 0,
-      };
+    test(
+      'legacy v1 saves migrate and keep visible errors / validated cells',
+      () {
+        final raw = <String, dynamic>{
+          'schemaVersion': 1,
+          'difficulty': DifficultyEnum.easy.name,
+          'solution': _solution,
+          'userGrid': [
+            2,
+            ...List<int>.generate(79, (i) => _solution[i + 1]),
+            0,
+          ],
+          'givens': List<int>.generate(79, (i) => i + 1),
+          'notes': <String, List<int>>{},
+          'undoStack': <Object>[],
+          'errorCount': 1,
+          'hintsUsed': 0,
+          'elapsedMs': 0,
+        };
 
-      final migrated = GameSessionMigration.migrate(raw);
-      expect(migrated, isNotNull);
+        final migrated = GameSessionMigration.migrate(raw);
+        expect(migrated, isNotNull);
 
-      final session = GameSession.fromJson(migrated!);
-      expect(session.hasVisibleError(0), isTrue);
-      expect(session.isNumberCompleted(2), isTrue);
-    });
+        final session = GameSession.fromJson(migrated!);
+        expect(session.hasVisibleError(0), isTrue);
+        expect(session.isNumberCompleted(2), isTrue);
+      },
+    );
 
     test('unknown schema version is rejected by migration', () {
       final raw = <String, dynamic>{
