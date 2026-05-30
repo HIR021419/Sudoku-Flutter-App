@@ -109,6 +109,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHaptic => 'Haptic feedback';
 
   @override
+  String get settingsShowHintButton => 'Show hint button';
+
+  @override
+  String get settingsShowHintButtonDescription =>
+      'When disabled, the hint button is hidden from the toolbar.';
+
+  @override
   String get settingsTheme => 'Theme';
 
   @override

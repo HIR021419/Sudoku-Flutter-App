@@ -1,46 +1,26 @@
 // ignore_for_file: invalid_annotation_target
-import 'package:json_annotation/json_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:sudoku/entities/_converters.dart';
 
+part 'undo_cell.freezed.dart';
 part 'undo_cell.g.dart';
 
 /// Snapshot d'une cellule pour l'historique d'undo.
 ///
-/// Sérialisé via json_serializable — regénérer avec :
+/// Immuable — regénérer après modification :
 ///   flutter pub run build_runner build --delete-conflicting-outputs
-@JsonSerializable()
-class UndoCell {
-  const UndoCell({
-    required this.index,
-    required this.value,
-    required this.notes,
-    required this.hasVisibleError,
-    required this.isValidatedCorrect,
-  });
-
-  @JsonKey(name: 'i')
-  final int index;
-
-  @JsonKey(name: 'v')
-  final int value;
-
-  @JsonKey(name: 'n', fromJson: _notesFromJson, toJson: _notesToJson)
-  final Set<int> notes;
-
-  @JsonKey(name: 'e')
-  final bool hasVisibleError;
-
-  @JsonKey(name: 'ok')
-  final bool isValidatedCorrect;
+@freezed
+abstract class UndoCell with _$UndoCell {
+  const factory UndoCell({
+    @JsonKey(name: 'i') required int index,
+    @JsonKey(name: 'v') required int value,
+    @JsonKey(name: 'n') @IntSetConverter() required Set<int> notes,
+    @JsonKey(name: 'e') required bool hasVisibleError,
+    @JsonKey(name: 'ok') required bool isValidatedCorrect,
+  }) = _UndoCell;
 
   factory UndoCell.fromJson(Map<String, dynamic> json) =>
       _$UndoCellFromJson(json);
-
-  Map<String, dynamic> toJson() => _$UndoCellToJson(this);
-
-  static Set<int> _notesFromJson(List<dynamic> list) =>
-      list.map((e) => (e as num).toInt()).toSet();
-
-  static List<int> _notesToJson(Set<int> notes) => notes.toList();
 }
 
 /// Une entrée d'undo regroupe toutes les cellules affectées par UNE action.

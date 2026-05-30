@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:provider/provider.dart';
-import 'repositories/game_repository.dart';
-import 'l10n/app_localizations.dart';
-import 'controllers/settings_controller.dart';
-import 'controllers/stats_controller.dart';
-import 'pages/home_page.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:sudoku/controllers/settings_notifier.dart';
+import 'package:sudoku/entities/settings.dart';
+import 'package:sudoku/l10n/app_localizations.dart';
+import 'package:sudoku/pages/home_page.dart';
 
-class SudokuApp extends StatelessWidget {
-  const SudokuApp({
-    super.key,
-    required this.repository,
-    required this.statsController,
-    required this.settingsController,
-    this.initialSaved,
-  });
+class SudokuApp extends ConsumerWidget {
+  const SudokuApp({super.key, this.initialSaved});
 
-  final GameRepository repository;
-  final StatsController statsController;
-  final SettingsController settingsController;
   final Map<String, dynamic>? initialSaved;
 
   ThemeData _buildTheme(Brightness brightness) {
@@ -47,34 +37,27 @@ class SudokuApp extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider<StatsController>.value(value: statsController),
-        ChangeNotifierProvider<SettingsController>.value(value: settingsController),
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Avant d'avoir chargé les settings, on tombe sur les defaults — ça évite
+    // un flicker de thème au boot. Le rebuild se fera dès que l'AsyncNotifier
+    // a fini son load (quelques ms avec SharedPreferences).
+    final settings = ref.watch(settingsNotifierProvider).valueOrNull ??
+        const Settings();
+
+    return MaterialApp(
+      title: 'Sudoku',
+      debugShowCheckedModeBanner: false,
+      theme: _buildTheme(Brightness.light),
+      darkTheme: _buildTheme(Brightness.dark),
+      themeMode: settings.theme.themeMode,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
       ],
-      child: Consumer<SettingsController>(
-        builder: (context, settings, _) {
-          return MaterialApp(
-            title: 'Sudoku',
-            debugShowCheckedModeBanner: false,
-            theme: _buildTheme(Brightness.light),
-            darkTheme: _buildTheme(Brightness.dark),
-            themeMode: settings.settings.theme.themeMode,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: HomePage(
-              repository: repository,
-              initialSaved: initialSaved,
-            ),
-          );
-        },
-      ),
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: HomePage(initialSaved: initialSaved),
     );
   }
 }

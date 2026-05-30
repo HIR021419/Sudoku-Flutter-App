@@ -1,4 +1,5 @@
 /// Utilitaires de formatage pour l'affichage des données de jeu.
+library;
 
 /// Formate une [Duration] en HH:MM:SS si la durée dépasse une heure,
 /// sinon en MM:SS.

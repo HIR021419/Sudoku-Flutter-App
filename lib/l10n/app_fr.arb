@@ -47,6 +47,8 @@
   "settingsTitle": "Paramètres",
   "settingsSound": "Son",
   "settingsHaptic": "Retour haptique",
+  "settingsShowHintButton": "Afficher le bouton indice",
+  "settingsShowHintButtonDescription": "Si désactivé, le bouton indice n'est pas affiché dans la barre d'outils.",
   "settingsTheme": "Thème",
   "settingsValidationMode": "Contrôle des erreurs",
   "validationModeAutoCheck": "Vérification auto",

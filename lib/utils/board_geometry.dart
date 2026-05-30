@@ -2,6 +2,7 @@
 ///
 /// Toutes les fonctions opèrent sur un index linéaire dans [0..80],
 /// où `index = row * 9 + col`.
+library;
 
 /// Ligne de la cellule à [index] (0-based).
 int rowOf(int index) => index ~/ 9;

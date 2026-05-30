@@ -1,66 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:sudoku/controllers/game_notifier.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
-import 'package:sudoku/controllers/game_controller.dart';
 
-class NumberPadWidget extends StatelessWidget {
+/// Tous les nombres complétés (1..9 = bits 0..8 → 0x1FF).
+const int _allNumbersMask = 0x1FF;
+
+class NumberPadWidget extends ConsumerWidget {
   const NumberPadWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final state = context
-        .select<
-          GameController,
-          ({
-            bool fillMode,
-            bool notesMode,
-            int? activeNumber,
-            int completedMask,
-          })
-        >(
-          (c) => (
-            fillMode: c.fillMode,
-            notesMode: c.notesMode,
-            activeNumber: c.activeNumber,
-            completedMask: c.completedNumbersMask,
-          ),
-        );
-    final visibleNumbers = [
-      for (int number = 1; number <= 9; number++)
-        if (state.completedMask & (1 << (number - 1)) == 0) number,
-    ];
+    final ui = ref.watch(gameNotifierProvider.select((s) => s?.ui));
+    final completedMask = ref.watch(
+      gameNotifierProvider.select((s) => s?.session.completedNumbersMask ?? 0),
+    );
 
-    if (visibleNumbers.isEmpty) {
+    if (ui == null) return const SizedBox.shrink();
+
+    // Si tous les nombres sont placés, on cache totalement le numpad
+    // (la partie est probablement gagnée — WinDialog prend le relais).
+    if (completedMask == _allNumbersMask) {
       return const SizedBox.shrink();
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
         const spacing = 6.0;
-        final buttonWidth =
-            (constraints.maxWidth - spacing * (visibleNumbers.length - 1)) /
-            visibleNumbers.length;
-        final buttonHeight = buttonWidth.clamp(40.0, 64.0);
+        const slotCount = 9;
+        final slotWidth =
+            (constraints.maxWidth - spacing * (slotCount - 1)) / slotCount;
+        final buttonHeight = slotWidth.clamp(40.0, 64.0);
 
         return SizedBox(
           height: buttonHeight,
           child: Row(
             children: [
-              for (int i = 0; i < visibleNumbers.length; i++) ...[
-                if (i > 0) const SizedBox(width: spacing),
+              for (int number = 1; number <= 9; number++) ...[
+                if (number > 1) const SizedBox(width: spacing),
                 Expanded(
-                  child: _NumberButton(
-                    number: visibleNumbers[i],
-                    isActive:
-                        state.fillMode &&
-                        state.activeNumber == visibleNumbers[i],
-                    isNotes: state.notesMode,
-                    colorScheme: colorScheme,
-                    onTap: () => context.read<GameController>().onNumberPadTap(
-                      visibleNumbers[i],
-                    ),
-                  ),
+                  child: (completedMask & (1 << (number - 1))) != 0
+                      // Slot préservé mais vide pour ce nombre déjà complété.
+                      // L'utilisateur conserve un repère visuel constant.
+                      ? const SizedBox.shrink()
+                      : _NumberButton(
+                          number: number,
+                          isActive:
+                              ui.fillMode && ui.activeNumber == number,
+                          isNotes: ui.notesMode,
+                          colorScheme: colorScheme,
+                          onTap: () => ref
+                              .read(gameNotifierProvider.notifier)
+                              .onNumberPadTap(number),
+                        ),
                 ),
               ],
             ],
@@ -111,8 +104,8 @@ class _NumberButton extends StatelessWidget {
       label: isNotes
           ? l10n.numberPadToggleNote(number)
           : (isActive
-                ? l10n.numberPadDeactivate(number)
-                : l10n.numberPadEnter(number)),
+              ? l10n.numberPadDeactivate(number)
+              : l10n.numberPadEnter(number)),
       button: true,
       child: Material(
         color: bg,

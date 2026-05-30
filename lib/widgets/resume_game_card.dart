@@ -3,6 +3,7 @@ import 'package:sudoku/entities/type/difficulty_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
 import 'package:sudoku/utils/game_formatters.dart';
+import 'package:sudoku/widgets/app_card.dart';
 
 class ResumeGameCard extends StatelessWidget {
   const ResumeGameCard({
@@ -23,13 +24,10 @@ class ResumeGameCard extends StatelessWidget {
     final elapsedMs = (saved['elapsedMs'] as num?)?.toInt() ?? 0;
     final elapsed = Duration(milliseconds: elapsedMs);
 
-    return Material(
+    return AppCard(
       color: colorScheme.primaryContainer,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Padding(
+      onTap: onTap,
+      child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
@@ -108,8 +106,7 @@ class ResumeGameCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
-
 }
+

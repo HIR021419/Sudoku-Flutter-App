@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:sudoku/controllers/stats_notifier.dart';
+import 'package:sudoku/entities/stats.dart';
 import 'package:sudoku/entities/type/difficulty_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
-import 'package:sudoku/entities/stats.dart';
-import 'package:sudoku/controllers/stats_controller.dart';
 import 'package:sudoku/utils/game_formatters.dart';
+import 'package:sudoku/widgets/app_card.dart';
 
-class StatsCardWidget extends StatelessWidget {
+class StatsCardWidget extends ConsumerWidget {
   const StatsCardWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
-    final stats = context.watch<StatsController>().stats;
+    final stats = ref.watch(statsNotifierProvider).valueOrNull ?? Stats.empty();
 
-    return Material(
-      color: colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(14),
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(

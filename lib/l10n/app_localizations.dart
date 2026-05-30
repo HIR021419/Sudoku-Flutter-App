@@ -272,6 +272,18 @@ abstract class AppLocalizations {
   /// **'Retour haptique'**
   String get settingsHaptic;
 
+  /// No description provided for @settingsShowHintButton.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afficher le bouton indice'**
+  String get settingsShowHintButton;
+
+  /// No description provided for @settingsShowHintButtonDescription.
+  ///
+  /// In fr, this message translates to:
+  /// **'Si désactivé, le bouton indice n\'est pas affiché dans la barre d\'outils.'**
+  String get settingsShowHintButtonDescription;
+
   /// No description provided for @settingsTheme.
   ///
   /// In fr, this message translates to:

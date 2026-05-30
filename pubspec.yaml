@@ -1,85 +1,59 @@
 name: sudoku
 description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
-# The following defines the version and build number for your application.
-# A version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-# Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-# In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
 
 environment:
   sdk: ^3.11.5
 
-# Dependencies specify other packages that your package needs in order to work.
-# To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
-# dependencies can be manually updated by changing the version numbers below to
-# the latest version available on pub.dev. To see which dependencies have newer
-# versions available, run `flutter pub outdated`.
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  provider: ^6.1.5+1
   shared_preferences: ^2.5.5
   intl: any
   confetti: ^0.8.0
-  json_annotation: ^4.12.0
-  freezed_annotation: ^3.1.0
+  # json_annotation 4.9.x : seule famille compatible avec json_serializable
+  # <6.11.3 (qui est lui-même contraint pour rester sur source_gen 2.x,
+  # requis par freezed <3.2.0).
+  json_annotation: ^4.9.0
+  # freezed_annotation forcé en 3.x : riverpod_generator 2.6.5 dépend
+  # transitivement de freezed_annotation ^3.0.0 (via riverpod_analyzer_utils).
+  freezed_annotation: ^3.0.0
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  flutter_hooks: ^0.21.2
+  hooks_riverpod: ^2.6.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.6
-  json_serializable: ^6.14.0
-  build_runner: ^2.15.0
-  freezed: ^3.2.5
+  # json_serializable cloué à 6.9.x : dernière famille sur source_gen ^2.x
+  # ET build ^2.x (compatible riverpod_generator 2.6.5).
+  json_serializable: '>=6.9.0 <6.10.0'
+  build_runner: ^2.4.13
+  # freezed borné à <3.2.0 : les versions 3.2.5+ exigent analyzer 9+,
+  # incompatible avec riverpod_generator (plafonné analyzer 7-8).
+  freezed: '>=3.0.0 <3.2.0'
+  riverpod_generator: ^2.6.5
 
 # Génération des icônes natives (Android mipmap-* + iOS Assets.xcassets)
 # depuis `assets/icon/icon.png` (1254×1254 RGB sans alpha).
-# Lancer : `dart run flutter_launcher_icons`
 flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
   image_path: "assets/icon/icon.png"
   min_sdk_android: 21
-  # remove_alpha_ios non requis : la source est RGB (pas d'alpha à supprimer).
-  # Adaptive icon Android 8+ : on skip pour cette itération.
-  # Le logo a un fond baked-in qui ferait du double-masking si on l'utilisait
-  # comme foreground adaptive. Pour un setup propre, prévoir plus tard un asset
-  # "foreground only" (juste le contenu, fond transparent) + couleur de fond.
 
-# Splash screen natif (windowBackground Android + LaunchScreen iOS).
-# Affiché par l'OS jusqu'à ce que Flutter ait son premier frame — pas de durée fixe.
-# Lancer : `dart run flutter_native_splash:create`
-#
-# Utilise `icon_foreground.png` (version transparente du logo, générée par flood-fill
-# depuis `icon.png`). Le squircle bleu flotte proprement sur le fond clair ou sombre
-# sans encadrement blanc disgracieux.
+# Splash screen natif.
 flutter_native_splash:
   color: "#FFFFFF"
   color_dark: "#141218"
@@ -90,48 +64,7 @@ flutter_native_splash:
     color_dark: "#141218"
     image: assets/icon/icon_foreground.png
     image_dark: assets/icon/icon_foreground.png
-    # Android 12+ utilise une API de splash limitée :
-    # icône centrée (zone safe 160dp), pas de texte, fond plein.
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
   generate: true
-
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
-
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
-
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package

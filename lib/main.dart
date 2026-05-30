@@ -1,26 +1,12 @@
 import 'package:flutter/material.dart';
-import 'repositories/game_repository.dart';
-import 'repositories/settings_repository.dart';
-import 'repositories/stats_repository.dart';
-import 'controllers/settings_controller.dart';
-import 'controllers/stats_controller.dart';
-import 'sudoku_app.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:sudoku/repositories/game_repository.dart';
+import 'package:sudoku/sudoku_app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final gameRepo = SharedPrefsGameRepository();
-  final statsRepo = SharedPrefsStatsRepository();
-  final settingsRepo = SharedPrefsSettingsRepository();
-
-  final saved = await gameRepo.loadSaved();
-  final statsController = StatsController(repository: statsRepo);
-  final settingsController = SettingsController(repository: settingsRepo);
-  await Future.wait([statsController.load(), settingsController.load()]);
-
-  runApp(SudokuApp(
-    repository: gameRepo,
-    statsController: statsController,
-    settingsController: settingsController,
-    initialSaved: saved,
-  ));
+  // Précharge le saved avant runApp pour éviter un flicker initial sur le
+  // bouton "Reprendre". Les notifiers Settings/Stats se chargent en lazy.
+  final saved = await SharedPrefsGameRepository().loadSaved();
+  runApp(ProviderScope(child: SudokuApp(initialSaved: saved)));
 }

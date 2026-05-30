@@ -1,66 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:sudoku/controllers/game_notifier.dart';
+import 'package:sudoku/controllers/settings_notifier.dart';
+import 'package:sudoku/entities/settings.dart';
 import 'package:sudoku/entities/type/validation_mode_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
-import 'package:sudoku/controllers/game_controller.dart';
 
-class GameToolbarWidget extends StatelessWidget {
+class GameToolbarWidget extends ConsumerWidget {
   const GameToolbarWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final flags = context
-        .select<
-          GameController,
-          ({bool notesMode, bool fillMode, ValidationModeEnum validationMode})
-        >(
-          (c) => (
-            notesMode: c.notesMode,
-            fillMode: c.fillMode,
-            validationMode: c.validationMode,
-          ),
-        );
-    final controller = context.read<GameController>();
+    final ui = ref.watch(gameNotifierProvider.select((s) => s?.ui));
+    final validationMode = ref.watch(
+      settingsNotifierProvider.select(
+        (s) =>
+            s.valueOrNull?.validationMode ?? const Settings().validationMode,
+      ),
+    );
+    final hintButtonVisible = ref.watch(
+      settingsNotifierProvider.select(
+        (s) =>
+            s.valueOrNull?.hintButtonVisible ??
+            const Settings().hintButtonVisible,
+      ),
+    );
+    final notifier = ref.read(gameNotifierProvider.notifier);
+
+    final notesMode = ui?.notesMode ?? false;
+    final fillMode = ui?.fillMode ?? false;
+
     final buttons = <Widget>[
       _ToolbarButton(
         icon: Icons.undo_rounded,
         label: l10n.toolbarUndo,
-        onTap: controller.undo,
+        onTap: notifier.undo,
       ),
       _ToolbarButton(
         icon: Icons.backspace_outlined,
         label: l10n.toolbarErase,
-        onTap: controller.eraseCell,
+        onTap: notifier.eraseCell,
       ),
       _ToolbarButton(
         icon: Icons.edit_note_rounded,
         label: l10n.toolbarNotes,
-        onTap: controller.toggleNotesMode,
-        isActive: flags.notesMode,
+        onTap: notifier.toggleNotesMode,
+        isActive: notesMode,
       ),
       _ToolbarButton(
         icon: Icons.bolt_rounded,
         label: l10n.toolbarFast,
-        onTap: controller.toggleFillMode,
-        isActive: flags.fillMode,
+        onTap: notifier.toggleFillMode,
+        isActive: fillMode,
       ),
-      _ToolbarButton(
-        icon: Icons.lightbulb_outline_rounded,
-        label: l10n.toolbarHint,
-        onTap: controller.hint,
-      ),
-    ];
-
-    if (flags.validationMode == ValidationModeEnum.validate) {
-      buttons.add(
+      if (hintButtonVisible)
+        _ToolbarButton(
+          icon: Icons.lightbulb_outline_rounded,
+          label: l10n.toolbarHint,
+          onTap: notifier.hint,
+        ),
+      if (validationMode == ValidationModeEnum.validate)
         _ToolbarButton(
           icon: Icons.fact_check_outlined,
           label: l10n.toolbarValidate,
-          onTap: controller.validateBoard,
+          onTap: notifier.validateBoard,
         ),
-      );
-    }
+    ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -70,7 +76,7 @@ class GameToolbarWidget extends StatelessWidget {
             : (buttons.length > 5 ? 3 : buttons.length);
         final buttonWidth =
             (constraints.maxWidth - spacing * (buttonsPerRow - 1)) /
-            buttonsPerRow;
+                buttonsPerRow;
 
         return Wrap(
           spacing: spacing,

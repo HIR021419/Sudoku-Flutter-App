@@ -109,6 +109,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsHaptic => 'Retour haptique';
 
   @override
+  String get settingsShowHintButton => 'Afficher le bouton indice';
+
+  @override
+  String get settingsShowHintButtonDescription =>
+      'Si désactivé, le bouton indice n\'est pas affiché dans la barre d\'outils.';
+
+  @override
   String get settingsTheme => 'Thème';
 
   @override

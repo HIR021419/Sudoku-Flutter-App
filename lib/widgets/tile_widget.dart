@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:sudoku/controllers/game_notifier.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
-import 'package:sudoku/controllers/game_controller.dart';
 import 'package:sudoku/utils/board_geometry.dart';
 
 typedef _TileVm = ({
@@ -22,25 +22,62 @@ int _notesToMask(Set<int> notes) {
   return mask;
 }
 
-class TileWidget extends StatelessWidget {
+class TileWidget extends ConsumerWidget {
   const TileWidget({super.key, required this.index});
 
   final int index;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final vm = context.select<GameController, _TileVm>(
-      (c) => (
-        value: c.valueAt(index),
-        isGiven: c.isGiven(index),
-        isSelected: c.isSelected(index),
-        isRelated: c.isRelated(index),
-        isSameValue: c.isSameValue(index),
-        hasError: c.hasError(index),
-        notesMask: _notesToMask(c.notesAt(index)),
-      ),
+
+    final vm = ref.watch(
+      gameNotifierProvider.select<_TileVm>((state) {
+        if (state == null) {
+          return (
+            value: 0,
+            isGiven: false,
+            isSelected: false,
+            isRelated: false,
+            isSameValue: false,
+            hasError: false,
+            notesMask: 0,
+          );
+        }
+        final session = state.session;
+        final ui = state.ui;
+        final selected = ui.selectedIndex;
+        final isSelected = selected == index;
+
+        // isRelated : même ligne/col/box que la case sélectionnée.
+        bool isRelated = false;
+        if (selected != null && !isSelected) {
+          isRelated = rowOf(index) == rowOf(selected) ||
+              colOf(index) == colOf(selected) ||
+              boxOf(index) == boxOf(selected);
+        }
+
+        // isSameValue : même valeur que la case sélectionnée (ou que
+        // l'active number en fillMode).
+        final ref0 = ui.fillMode
+            ? ui.activeNumber
+            : (selected != null ? session.valueAt(selected) : null);
+        final isSameValue = ref0 != null &&
+            ref0 != 0 &&
+            session.valueAt(index) == ref0 &&
+            index != selected;
+
+        return (
+          value: session.valueAt(index),
+          isGiven: session.isGiven(index),
+          isSelected: isSelected,
+          isRelated: isRelated,
+          isSameValue: isSameValue,
+          hasError: session.hasVisibleError(index),
+          notesMask: _notesToMask(session.notesAt(index)),
+        );
+      }),
     );
 
     final row = rowOf(index) + 1;
@@ -56,7 +93,7 @@ class TileWidget extends StatelessWidget {
         isRelated: vm.isRelated,
       ),
       child: InkWell(
-        onTap: () => context.read<GameController>().onTileTap(index),
+        onTap: () => ref.read(gameNotifierProvider.notifier).onTileTap(index),
         child: Semantics(
           label: semanticLabel,
           button: true,

@@ -29,6 +29,8 @@
   "settingsTitle": "Settings",
   "settingsSound": "Sound",
   "settingsHaptic": "Haptic feedback",
+  "settingsShowHintButton": "Show hint button",
+  "settingsShowHintButtonDescription": "When disabled, the hint button is hidden from the toolbar.",
   "settingsTheme": "Theme",
   "settingsValidationMode": "Error checking",
   "validationModeAutoCheck": "Auto-check",

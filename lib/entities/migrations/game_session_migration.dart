@@ -1,16 +1,27 @@
-const int kSessionSchemaVersion = 2;
+import 'package:sudoku/entities/_schema_versions.dart';
 
-class MigrationUtils {
-  static Map<String, dynamic>? migrateToLatest(Map<String, dynamic> json) {
+/// Migration du JSON persisté de [GameSession] vers la version courante.
+///
+/// Stratégie **stricte** : sur version inconnue ou JSON corrompu → retourne
+/// `null`. Le caller (typiquement le `GameNotifier`) doit alors purger
+/// le blob et démarrer une nouvelle partie.
+class GameSessionMigration {
+  const GameSessionMigration._();
+
+  /// Retourne un JSON dans la version [kGameSessionSchemaVersion], ou `null`
+  /// si la migration est impossible.
+  static Map<String, dynamic>? migrate(Map<String, dynamic> json) {
     final version = (json['schemaVersion'] as num?)?.toInt();
     return switch (version) {
-      1 => _migrateV1ToV2(json),
-      kSessionSchemaVersion => Map<String, dynamic>.from(json),
+      1 => _v1ToV2(json),
+      kGameSessionSchemaVersion => Map<String, dynamic>.from(json),
       _ => null,
     };
   }
 
-  static Map<String, dynamic>? _migrateV1ToV2(Map<String, dynamic> json) {
+  /// v1 → v2 : ajout des champs `revealedErrors` et `validatedCorrect`,
+  /// reconstruits depuis `userGrid` vs `solution`.
+  static Map<String, dynamic>? _v1ToV2(Map<String, dynamic> json) {
     final solution = _readIntList(json['solution']);
     final userGrid = _readIntList(json['userGrid']);
     final givensList = _readIntList(json['givens']);
@@ -35,7 +46,7 @@ class MigrationUtils {
 
     return {
       ...json,
-      'schemaVersion': kSessionSchemaVersion,
+      'schemaVersion': kGameSessionSchemaVersion,
       'revealedErrors': revealedErrors,
       'validatedCorrect': validatedCorrect,
     };
