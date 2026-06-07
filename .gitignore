@@ -48,3 +48,14 @@ app.*.map.json
 /android/key.properties
 *.jks
 *.keystore
+
+# Secrets Google / OAuth — NE JAMAIS COMMIT
+# (clé OAuth téléchargée depuis Google Cloud / Play Console, comptes de service…)
+client_secret*.json
+*.apps.googleusercontent.com.json
+**/service-account*.json
+**/service_account*.json
+google-services.json
+GoogleService-Info.plist
+
+docs/

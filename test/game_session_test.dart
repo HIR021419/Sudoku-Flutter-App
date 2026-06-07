@@ -161,6 +161,69 @@ void main() {
       expect(undone.errorCount, after.errorCount);
     });
   });
+
+  group('GameSession notes vs erreurs (#9)', () {
+    test('auto-check préserve les notes de la case sur une saisie erronée', () {
+      // index 0 est vide (solution[0] == 1) ; on y pose une note puis une
+      // valeur fausse en autoCheck.
+      final withNote = _buildNearlyCompleteSession().toggleNote(0, 5);
+      expect(withNote.notesAt(0), contains(5));
+
+      final wrong = withNote.applyValue(
+        0,
+        2,
+        validationMode: ValidationModeEnum.autoCheck,
+      );
+
+      expect(wrong.hasVisibleError(0), isTrue);
+      // #9 : la note ne doit PAS être supprimée par l'erreur.
+      expect(wrong.notesAt(0), contains(5));
+    });
+
+    test('auto-check nettoie les notes sur une saisie correcte', () {
+      final withNote = _buildNearlyCompleteSession().toggleNote(0, 5);
+      final correct = withNote.applyValue(
+        0,
+        1,
+        validationMode: ValidationModeEnum.autoCheck,
+      );
+
+      // Comportement historique conservé : valeur correcte → notes nettoyées.
+      expect(correct.notesAt(0), isEmpty);
+    });
+  });
+
+  group('GameSession scoring effectif (#10)', () {
+    test('timePenalty = 2 min/erreur + 1 min/indice', () {
+      final s = _buildNearlyCompleteSession().copyWith(
+        errorCount: 2,
+        hintsUsed: 3,
+      );
+      // 2*2min + 3*1min = 7 min
+      expect(s.timePenalty, const Duration(minutes: 7));
+    });
+
+    test('effectiveTime ajoute les pénalités au temps brut', () {
+      final s = _buildNearlyCompleteSession().copyWith(
+        errorCount: 1,
+        hintsUsed: 1,
+      );
+      // 5 min brut + (2 + 1) min de pénalités = 8 min
+      expect(
+        s.effectiveTime(const Duration(minutes: 5)),
+        const Duration(minutes: 8),
+      );
+    });
+
+    test('partie propre : effectiveTime == temps brut', () {
+      final s = _buildNearlyCompleteSession();
+      expect(s.timePenalty, Duration.zero);
+      expect(
+        s.effectiveTime(const Duration(minutes: 4)),
+        const Duration(minutes: 4),
+      );
+    });
+  });
 }
 
 GameSession _buildNearlyCompleteSession() {

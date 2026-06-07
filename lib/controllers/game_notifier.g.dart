@@ -6,7 +6,7 @@ part of 'game_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$gameNotifierHash() => r'4fc9e707865e9ad36423835ad68049f022b8d05c';
+String _$gameNotifierHash() => r'e2f482596dfc522079f887dcbf183e3fd17672a7';
 
 /// Notifier autoDispose qui pilote l'état d'une partie.
 ///

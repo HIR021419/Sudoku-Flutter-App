@@ -8,12 +8,16 @@ import 'package:sudoku/utils/game_formatters.dart';
 Future<void> showWinDialog(
   BuildContext context, {
   required Duration duration,
+  required Duration effectiveDuration,
   required int errors,
   required int hints,
   required String difficultyLabel,
   required VoidCallback onBackHome,
 }) {
   final l10n = AppLocalizations.of(context);
+  // #10 — temps retenu (brut + pénalités) affiché seulement s'il diffère du
+  // temps brut, i.e. s'il y a eu des erreurs et/ou des indices.
+  final hasPenalty = effectiveDuration > duration;
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -55,6 +59,18 @@ Future<void> showWinDialog(
                 ),
               ],
             ),
+            if (hasPenalty) ...[
+              const SizedBox(height: 16),
+              Text(
+                l10n.winEffectiveTime(formatDuration(effectiveDuration)),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ],
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -81,6 +97,30 @@ Future<bool> showAbandonDialog(BuildContext context) async {
     builder: (dialogContext) => AlertDialog(
       title: Text(l10n.leaveGameTitle),
       content: Text(l10n.leaveGameMessage),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(l10n.leaveGameCancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(l10n.leaveGameConfirm),
+        ),
+      ],
+    ),
+  );
+  return result ?? false;
+}
+
+/// Variante pour le **défi du jour** : message dédié (la tentative du jour est
+/// perdue, pas de reprise). Retourne true si l'utilisateur confirme.
+Future<bool> showDailyAbandonDialog(BuildContext context) async {
+  final l10n = AppLocalizations.of(context);
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l10n.dailyAbandonTitle),
+      content: Text(l10n.dailyAbandonMessage),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(false),

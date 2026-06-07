@@ -5,8 +5,16 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
 import 'app_localizations_fr.dart';
+import 'app_localizations_hi.dart';
+import 'app_localizations_it.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_pt.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -94,8 +102,16 @@ abstract class AppLocalizations {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
     Locale('en'),
+    Locale('es'),
     Locale('fr'),
+    Locale('hi'),
+    Locale('it'),
+    Locale('ja'),
+    Locale('pt'),
+    Locale('ru'),
+    Locale('zh'),
   ];
 
   /// Application title
@@ -182,11 +198,227 @@ abstract class AppLocalizations {
   /// **'Indices'**
   String get winStatHints;
 
+  /// Effective time including penalties shown on the win dialog
+  ///
+  /// In fr, this message translates to:
+  /// **'Temps retenu : {time} (pénalités incluses)'**
+  String winEffectiveTime(String time);
+
   /// No description provided for @winBackHome.
   ///
   /// In fr, this message translates to:
   /// **'Retour à l\'accueil'**
   String get winBackHome;
+
+  /// No description provided for @dailyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Défi du jour'**
+  String get dailyTitle;
+
+  /// No description provided for @dailyCardPlay.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jouez la grille du jour'**
+  String get dailyCardPlay;
+
+  /// Daily challenge solved, with effective time
+  ///
+  /// In fr, this message translates to:
+  /// **'Résolu en {time}'**
+  String dailyCardWon(String time);
+
+  /// No description provided for @dailyCardComeBack.
+  ///
+  /// In fr, this message translates to:
+  /// **'Revenez demain pour une nouvelle grille'**
+  String get dailyCardComeBack;
+
+  /// No description provided for @dailyAbandonTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Abandonner le défi du jour ?'**
+  String get dailyAbandonTitle;
+
+  /// No description provided for @dailyAbandonMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous n\'avez qu\'une tentative par jour : si vous quittez maintenant, le défi du jour sera perdu jusqu\'à demain.'**
+  String get dailyAbandonMessage;
+
+  /// No description provided for @leaderboardsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Classements'**
+  String get leaderboardsTitle;
+
+  /// No description provided for @achievementsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Succès'**
+  String get achievementsTitle;
+
+  /// Snackbar shown when achievements are unlocked
+  ///
+  /// In fr, this message translates to:
+  /// **'Succès débloqué : {names}'**
+  String achievementsUnlockedSnack(String names);
+
+  /// No description provided for @achFirstWinTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Première victoire'**
+  String get achFirstWinTitle;
+
+  /// No description provided for @achFirstWinDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résoudre votre première grille.'**
+  String get achFirstWinDesc;
+
+  /// No description provided for @achNoMistakeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans faute'**
+  String get achNoMistakeTitle;
+
+  /// No description provided for @achNoMistakeDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gagner une partie sans aucune erreur.'**
+  String get achNoMistakeDesc;
+
+  /// No description provided for @achNoHintTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sans indice'**
+  String get achNoHintTitle;
+
+  /// No description provided for @achNoHintDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gagner une partie sans aucun indice.'**
+  String get achNoHintDesc;
+
+  /// No description provided for @achGames10Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'10 parties'**
+  String get achGames10Title;
+
+  /// No description provided for @achGames10Desc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résoudre 10 grilles.'**
+  String get achGames10Desc;
+
+  /// No description provided for @achGames50Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'50 parties'**
+  String get achGames50Title;
+
+  /// No description provided for @achGames50Desc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résoudre 50 grilles.'**
+  String get achGames50Desc;
+
+  /// No description provided for @achGames100Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'100 parties'**
+  String get achGames100Title;
+
+  /// No description provided for @achGames100Desc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résoudre 100 grilles.'**
+  String get achGames100Desc;
+
+  /// No description provided for @achAllDifficultiesTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Touche-à-tout'**
+  String get achAllDifficultiesTitle;
+
+  /// No description provided for @achAllDifficultiesDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gagner dans les quatre difficultés.'**
+  String get achAllDifficultiesDesc;
+
+  /// No description provided for @achDailyFirstTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Défi relevé'**
+  String get achDailyFirstTitle;
+
+  /// No description provided for @achDailyFirstDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résoudre un défi du jour.'**
+  String get achDailyFirstDesc;
+
+  /// No description provided for @achDailyStreak7Title.
+  ///
+  /// In fr, this message translates to:
+  /// **'Semaine parfaite'**
+  String get achDailyStreak7Title;
+
+  /// No description provided for @achDailyStreak7Desc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Résoudre le défi du jour 7 jours d\'affilée.'**
+  String get achDailyStreak7Desc;
+
+  /// No description provided for @achFastEasyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Éclair (facile)'**
+  String get achFastEasyTitle;
+
+  /// No description provided for @achFastEasyDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gagner une grille facile en moins de 10 min.'**
+  String get achFastEasyDesc;
+
+  /// No description provided for @achFastMediumTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Éclair (moyen)'**
+  String get achFastMediumTitle;
+
+  /// No description provided for @achFastMediumDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gagner une grille moyenne en moins de 12 min.'**
+  String get achFastMediumDesc;
+
+  /// No description provided for @achFastHardTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Éclair (difficile)'**
+  String get achFastHardTitle;
+
+  /// No description provided for @achFastHardDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gagner une grille difficile en moins de 15 min.'**
+  String get achFastHardDesc;
+
+  /// No description provided for @achFastExpertTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Éclair (expert)'**
+  String get achFastExpertTitle;
+
+  /// No description provided for @achFastExpertDesc.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gagner une grille expert en moins de 20 min.'**
+  String get achFastExpertDesc;
 
   /// No description provided for @toolbarUndo.
   ///
@@ -463,8 +695,18 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'fr'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'de',
+    'en',
+    'es',
+    'fr',
+    'hi',
+    'it',
+    'ja',
+    'pt',
+    'ru',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -473,10 +715,26 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
     case 'fr':
       return AppLocalizationsFr();
+    case 'hi':
+      return AppLocalizationsHi();
+    case 'it':
+      return AppLocalizationsIt();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'pt':
+      return AppLocalizationsPt();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

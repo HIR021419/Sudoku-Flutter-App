@@ -55,7 +55,123 @@ class AppLocalizationsEn extends AppLocalizations {
   String get winStatHints => 'Hints';
 
   @override
+  String winEffectiveTime(String time) {
+    return 'Final time: $time (penalties included)';
+  }
+
+  @override
   String get winBackHome => 'Back to home';
+
+  @override
+  String get dailyTitle => 'Daily challenge';
+
+  @override
+  String get dailyCardPlay => 'Play today\'s grid';
+
+  @override
+  String dailyCardWon(String time) {
+    return 'Solved in $time';
+  }
+
+  @override
+  String get dailyCardComeBack => 'Come back tomorrow for a new grid';
+
+  @override
+  String get dailyAbandonTitle => 'Abandon today\'s challenge?';
+
+  @override
+  String get dailyAbandonMessage =>
+      'You only get one attempt per day: if you leave now, today\'s challenge is lost until tomorrow.';
+
+  @override
+  String get leaderboardsTitle => 'Leaderboards';
+
+  @override
+  String get achievementsTitle => 'Achievements';
+
+  @override
+  String achievementsUnlockedSnack(String names) {
+    return 'Achievement unlocked: $names';
+  }
+
+  @override
+  String get achFirstWinTitle => 'First win';
+
+  @override
+  String get achFirstWinDesc => 'Solve your first grid.';
+
+  @override
+  String get achNoMistakeTitle => 'Flawless';
+
+  @override
+  String get achNoMistakeDesc => 'Win a game without any mistake.';
+
+  @override
+  String get achNoHintTitle => 'No hints';
+
+  @override
+  String get achNoHintDesc => 'Win a game without any hint.';
+
+  @override
+  String get achGames10Title => '10 games';
+
+  @override
+  String get achGames10Desc => 'Solve 10 grids.';
+
+  @override
+  String get achGames50Title => '50 games';
+
+  @override
+  String get achGames50Desc => 'Solve 50 grids.';
+
+  @override
+  String get achGames100Title => '100 games';
+
+  @override
+  String get achGames100Desc => 'Solve 100 grids.';
+
+  @override
+  String get achAllDifficultiesTitle => 'Jack of all';
+
+  @override
+  String get achAllDifficultiesDesc => 'Win on all four difficulties.';
+
+  @override
+  String get achDailyFirstTitle => 'Daily done';
+
+  @override
+  String get achDailyFirstDesc => 'Solve a daily challenge.';
+
+  @override
+  String get achDailyStreak7Title => 'Perfect week';
+
+  @override
+  String get achDailyStreak7Desc =>
+      'Solve the daily challenge 7 days in a row.';
+
+  @override
+  String get achFastEasyTitle => 'Lightning (easy)';
+
+  @override
+  String get achFastEasyDesc => 'Win an easy grid in under 10 min.';
+
+  @override
+  String get achFastMediumTitle => 'Lightning (medium)';
+
+  @override
+  String get achFastMediumDesc => 'Win a medium grid in under 12 min.';
+
+  @override
+  String get achFastHardTitle => 'Lightning (hard)';
+
+  @override
+  String get achFastHardDesc => 'Win a hard grid in under 15 min.';
+
+  @override
+  String get achFastExpertTitle => 'Lightning (expert)';
+
+  @override
+  String get achFastExpertDesc => 'Win an expert grid in under 20 min.';
 
   @override
   String get toolbarUndo => 'Undo';

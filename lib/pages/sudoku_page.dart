@@ -3,15 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:sudoku/controllers/achievements_notifier.dart';
+import 'package:sudoku/controllers/daily_notifier.dart';
 import 'package:sudoku/controllers/game_notifier.dart';
 import 'package:sudoku/controllers/settings_notifier.dart';
 import 'package:sudoku/controllers/stats_notifier.dart';
 import 'package:sudoku/entities/settings.dart';
+import 'package:sudoku/entities/type/achievement_id.dart';
+import 'package:sudoku/l10n/achievement_l10n.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/l10n/difficulty_l10n.dart';
 import 'package:sudoku/models/game_state.dart';
 import 'package:sudoku/models/sudoku_page_init.dart';
 import 'package:sudoku/providers/repositories.dart';
+import 'package:sudoku/services/play_games_service.dart';
+import 'package:sudoku/utils/daily_challenge.dart';
 import 'package:sudoku/widgets/sudoku_dialogs.dart';
 import 'package:sudoku/widgets/sudoku_layout.dart';
 
@@ -48,9 +54,11 @@ class SudokuPage extends HookConsumerWidget {
     void showWinDialogNow() {
       final state = ref.read(gameNotifierProvider);
       if (state == null) return;
+      final rawDuration = state.completedDuration ?? Duration.zero;
       showWinDialog(
         context,
-        duration: state.completedDuration ?? Duration.zero,
+        duration: rawDuration,
+        effectiveDuration: state.session.effectiveTime(rawDuration),
         errors: state.session.errorCount,
         hints: state.session.hintsUsed,
         difficultyLabel: state.session.difficulty.localizedLabel(context),
@@ -63,17 +71,25 @@ class SudokuPage extends HookConsumerWidget {
     Future<void> handleExitAttempt() async {
       if (exitFlowInProgress.value) return;
       exitFlowInProgress.value = true;
+      try {
+        // Défi du jour non terminé : on confirme l'abandon (message dédié) et,
+        // si confirmé, on pose le verrou du jour (1 tentative). Une partie
+        // normale est sauvegardée silencieusement (reprise possible).
+        if (init is DailyGameInit &&
+            !(ref.read(gameNotifierProvider)?.isComplete ?? false)) {
+          final confirm = await showDailyAbandonDialog(context);
+          if (!context.mounted || !confirm) return; // reste sur la page
+          await ref.read(dailyChallengeProvider.notifier).recordAbandon();
+          if (!context.mounted) return;
+        }
 
-      // Pas de confirmation : on sauvegarde silencieusement la partie en
-      // cours et on rend la main à l'accueil. Si la partie est complète,
-      // `flushSave` appelle `repo.clear()` en interne (cf. GameNotifier).
-      // La confirmation d'abandon reste sur HomePage quand on lance une
-      // nouvelle partie alors qu'une est sauvegardée.
-      await ref.read(gameNotifierProvider.notifier).flushSave();
-      if (context.mounted && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+        await ref.read(gameNotifierProvider.notifier).flushSave();
+        if (context.mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      } finally {
+        exitFlowInProgress.value = false;
       }
-      exitFlowInProgress.value = false;
     }
 
     // --- Bootstrap : init le notifier après le premier frame ---
@@ -88,6 +104,11 @@ class SudokuPage extends HookConsumerWidget {
               difficulty: (init as NewGameInit).difficulty,
               solution: (init as NewGameInit).solution,
               givens: (init as NewGameInit).givens,
+            );
+          case DailyGameInit():
+            notifier.startDaily(
+              solution: (init as DailyGameInit).solution,
+              givens: (init as DailyGameInit).givens,
             );
           case RestoreGameInit():
             final ok = notifier.restoreFromJson(
@@ -160,9 +181,60 @@ class SudokuPage extends HookConsumerWidget {
         confettiController.play();
         final duration = next.completedDuration;
         if (duration != null) {
-          ref
-              .read(statsNotifierProvider.notifier)
-              .recordWin(next.session.difficulty, duration);
+          // #10 — temps EFFECTIF (brut + pénalités erreurs/indices) : fait foi
+          // pour le record et le classement.
+          final effective = next.session.effectiveTime(duration);
+          final session = next.session;
+          final isDaily = init is DailyGameInit;
+
+          // Notifiers/services capturés avant les `await` (évite l'usage de
+          // `ref` après un éventuel dispose du widget).
+          final statsNotifier = ref.read(statsNotifierProvider.notifier);
+          final dailyNotifier = ref.read(dailyChallengeProvider.notifier);
+          final achievements = ref.read(achievementsProvider.notifier);
+          final playGames = ref.read(playGamesServiceProvider);
+
+          // Enregistrement + évaluation des succès (#3) + envoi PGS (#2).
+          // Fire-and-forget.
+          () async {
+            final List<AchievementId> unlocked;
+            if (isDaily) {
+              final dateKey = dailyDateKey(DateTime.now());
+              await dailyNotifier.recordWin(
+                effective,
+                errorCount: session.errorCount,
+                hintsUsed: session.hintsUsed,
+              );
+              unlocked = await achievements.onDailyWin(dateKey: dateKey);
+              await playGames.submitDailyScore(effective);
+            } else {
+              await statsNotifier.recordWin(session.difficulty, effective);
+              unlocked = await achievements.onGameWin(
+                difficulty: session.difficulty,
+                effectiveTime: effective,
+                errorCount: session.errorCount,
+                hintsUsed: session.hintsUsed,
+              );
+              await playGames.submitDifficultyScore(
+                session.difficulty,
+                effective,
+              );
+            }
+            await playGames.unlockAchievements(unlocked);
+            if (unlocked.isNotEmpty && context.mounted) {
+              final names = unlocked
+                  .map((id) => id.localizedTitle(context))
+                  .join(', ');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context).achievementsUnlockedSnack(names),
+                  ),
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          }();
         }
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted &&
@@ -192,7 +264,11 @@ class SudokuPage extends HookConsumerWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(state.session.difficulty.localizedLabel(context)),
+          title: Text(
+            init is DailyGameInit
+                ? AppLocalizations.of(context).dailyTitle
+                : state.session.difficulty.localizedLabel(context),
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: handleExitAttempt,

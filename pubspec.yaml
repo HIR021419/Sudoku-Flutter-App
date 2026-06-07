@@ -1,8 +1,8 @@
 name: sudoku
-description: "A new Flutter project."
+description: "Sudoku app"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 2.2.2+3
 
 environment:
   sdk: ^3.11.5
@@ -17,6 +17,8 @@ dependencies:
   shared_preferences: ^2.5.5
   intl: any
   confetti: ^0.8.0
+  audioplayers: ^6.1.0
+  games_services: ^4.0.3
   # json_annotation 4.9.x : seule famille compatible avec json_serializable
   # <6.11.3 (qui est lui-même contraint pour rester sur source_gen 2.x,
   # requis par freezed <3.2.0).
@@ -59,12 +61,18 @@ flutter_native_splash:
   color_dark: "#141218"
   image: assets/icon/icon_foreground.png
   image_dark: assets/icon/icon_foreground.png
+  # Android 12+ masque TOUJOURS l'icône de splash en cercle. On utilise donc
+  # une image dédiée (1152×1152, contenu logé dans un cercle ~640px centré sur
+  # un canvas transparent) au lieu de `icon_foreground.png` qui remplissait
+  # tout le cadre et se faisait rogner aux bords (#11).
   android_12:
     color: "#FFFFFF"
     color_dark: "#141218"
-    image: assets/icon/icon_foreground.png
-    image_dark: assets/icon/icon_foreground.png
+    image: assets/icon/splash_android12.png
+    image_dark: assets/icon/splash_android12.png
 
 flutter:
   generate: true
   uses-material-design: true
+  assets:
+    - assets/sounds/

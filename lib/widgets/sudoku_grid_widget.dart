@@ -36,7 +36,13 @@ class SudokuGridWidget extends StatelessWidget {
           itemBuilder: (context, index) {
             final row = index ~/ 9;
             final col = index % 9;
-            return Container(
+            // #12 — bordures peintes en FOREGROUND (au-dessus de la tuile).
+            // Le `Material` de la tuile remplit son fond (highlight inclus) ;
+            // en position background, le fond recouvrait les fines lignes
+            // (0.5px) sur mobile et les faisait disparaître. En foreground,
+            // les lignes restent toujours visibles par-dessus le highlight.
+            return DecoratedBox(
+              position: DecorationPosition.foreground,
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(

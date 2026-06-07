@@ -27,3 +27,12 @@ class RestoreGameInit extends SudokuPageInit {
 
   final Map<String, dynamic> savedJson;
 }
+
+/// Défi du jour : grille déterministe (difficulté fixe), sans persistance de
+/// reprise. Une seule tentative par jour (cf. `DailyChallengeNotifier`).
+class DailyGameInit extends SudokuPageInit {
+  const DailyGameInit({required this.solution, required this.givens});
+
+  final List<int> solution;
+  final List<int> givens;
+}

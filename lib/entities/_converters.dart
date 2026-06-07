@@ -16,6 +16,16 @@ class DurationMsConverter implements JsonConverter<Duration, int> {
   int toJson(Duration d) => d.inMilliseconds;
 }
 
+/// `Duration?` ↔ JSON `int?` (millisecondes). `null`/négatif → `null`.
+class NullableDurationMsConverter implements JsonConverter<Duration?, int?> {
+  const NullableDurationMsConverter();
+  @override
+  Duration? fromJson(int? ms) =>
+      (ms == null || ms < 0) ? null : Duration(milliseconds: ms);
+  @override
+  int? toJson(Duration? d) => d?.inMilliseconds;
+}
+
 /// `Set<int>` ↔ JSON `List<dynamic>`.
 /// Utilisé pour `givens`, `revealedErrors`, `validatedCorrect`.
 class IntSetConverter implements JsonConverter<Set<int>, List<dynamic>> {

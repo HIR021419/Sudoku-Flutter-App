@@ -14,7 +14,9 @@ import 'package:sudoku/models/game_session_runtime.dart';
 import 'package:sudoku/models/game_state.dart';
 import 'package:sudoku/models/game_ui_state.dart';
 import 'package:sudoku/providers/repositories.dart';
+import 'package:sudoku/services/sound_service.dart';
 import 'package:sudoku/utils/board_geometry.dart';
+import 'package:sudoku/utils/daily_challenge.dart';
 
 part 'game_notifier.g.dart';
 
@@ -32,6 +34,7 @@ class GameNotifier extends _$GameNotifier {
 
   final GameSessionRuntime _runtime = GameSessionRuntime();
   final Random _random = Random();
+  final SoundService _sound = SoundService();
   Timer? _saveTimer;
   bool _saveEnabled = true;
   ({bool notesMode, bool fillMode, int? activeNumber}) _lastPersistedUi = (
@@ -43,7 +46,28 @@ class GameNotifier extends _$GameNotifier {
   @override
   GameState? build() {
     ref.onDispose(_disposeRuntime);
+    // Fix — passage en « vérification auto » : dès que le mode bascule vers
+    // autoCheck (depuis manuel/sans vérif), on relance une vérification
+    // complète de la grille en cours (erreurs révélées, cases correctes
+    // validées). Effet visible au retour sur la partie.
+    ref.listen(
+      settingsNotifierProvider.select((s) => s.valueOrNull?.validationMode),
+      (prev, next) {
+        if (next == ValidationModeEnum.autoCheck &&
+            prev != null &&
+            prev != ValidationModeEnum.autoCheck) {
+          _runFullAutoCheck();
+        }
+      },
+    );
     return null;
+  }
+
+  /// Re-vérifie toute la grille (utilisé au passage en mode autoCheck).
+  void _runFullAutoCheck() {
+    final s = state;
+    if (s == null || s.session.isComplete) return;
+    _applySession(s.session.validateBoardWithReport().session);
   }
 
   // --- Initialisation ---
@@ -64,6 +88,21 @@ class GameNotifier extends _$GameNotifier {
     _lastPersistedUi = (notesMode: false, fillMode: false, activeNumber: null);
     state = GameState(session: session);
     _scheduleSave();
+  }
+
+  /// Démarre le défi du jour (difficulté fixe, grille déterministe).
+  /// La persistance de reprise est **désactivée** : le défi ne crée pas de
+  /// slot de sauvegarde (une seule tentative par jour, pas de reprise).
+  void startDaily({required List<int> solution, required List<int> givens}) {
+    final session = GameSession.fromGenerated(
+      difficulty: dailyDifficulty,
+      solution: solution,
+      givens: givens,
+    );
+    _runtime.startFresh();
+    _saveEnabled = false;
+    _lastPersistedUi = (notesMode: false, fillMode: false, activeNumber: null);
+    state = GameState(session: session);
   }
 
   /// Restaure depuis un JSON. Retourne `true` si réussi, `false` si invalide
@@ -111,6 +150,10 @@ class GameNotifier extends _$GameNotifier {
       ref.read(settingsNotifierProvider).valueOrNull?.validationMode ??
       const Settings().validationMode;
 
+  bool get _soundEnabled =>
+      ref.read(settingsNotifierProvider).valueOrNull?.soundEnabled ??
+      const Settings().soundEnabled;
+
   // --- Actions utilisateur ---
 
   void onTileTap(int index) {
@@ -119,7 +162,17 @@ class GameNotifier extends _$GameNotifier {
     final session = s.session;
     final ui = s.ui;
 
-    if (ui.fillMode && session.valueAt(index) != 0) {
+    // #13 — En fillMode (mode valeur, autoCheck), taper une case déjà en
+    // erreur avec un chiffre actif doit y écrire le chiffre actif plutôt que
+    // de basculer l'activeNumber sur la valeur erronée. On laisse donc passer
+    // ce cas vers le bloc d'application ci-dessous.
+    final canOverwriteError =
+        _validationMode == ValidationModeEnum.autoCheck &&
+        !ui.notesMode &&
+        ui.activeNumber != null &&
+        session.hasVisibleError(index);
+
+    if (ui.fillMode && session.valueAt(index) != 0 && !canOverwriteError) {
       _setUi(ui.copyWith(activeNumber: session.valueAt(index)));
       _selectInternal(index);
       return;
@@ -127,19 +180,26 @@ class GameNotifier extends _$GameNotifier {
 
     if (ui.fillMode && ui.activeNumber != null) {
       final active = ui.activeNumber!;
-      final next = ui.notesMode
-          ? session.toggleNote(index, active)
-          : session.applyValue(
-              index,
-              active,
-              validationMode: _validationMode,
-            );
+
+      // #6 — En mode note, on bascule la note sans poser de highlight de
+      // sélection bleu sur la case (l'attention reste sur l'activeNumber).
+      if (ui.notesMode) {
+        _applySession(session.toggleNote(index, active));
+        _selectInternal(null);
+        return;
+      }
+
+      final next = session.applyValue(
+        index,
+        active,
+        validationMode: _validationMode,
+      );
       _applySession(next);
-      // Si l'activeNumber vient d'être complété (mode valeur), _applySession
-      // l'a auto-avancé. La cellule fraîchement remplie contient désormais le
-      // chiffre devenu inactif — la sélectionner placerait un highlight sur
-      // un chiffre qu'on a quitté → on désélectionne à la place.
-      if (!ui.notesMode && next.isNumberCompleted(active)) {
+      // Si l'activeNumber vient d'être complété, _applySession l'a auto-avancé.
+      // La cellule fraîchement remplie contient désormais le chiffre devenu
+      // inactif — la sélectionner placerait un highlight sur un chiffre qu'on
+      // a quitté → on désélectionne à la place.
+      if (next.isNumberCompleted(active)) {
         _selectInternal(null);
         return;
       }
@@ -155,12 +215,14 @@ class GameNotifier extends _$GameNotifier {
     final ui = s.ui;
 
     if (ui.fillMode) {
+      final selecting = ui.activeNumber != number; // active → null = désélection
       _setUi(
         ui.copyWith(
           activeNumber: ui.activeNumber == number ? null : number,
           selectedIndex: null,
         ),
       );
+      if (selecting && _soundEnabled) _sound.tap();
       return;
     }
 
@@ -279,6 +341,15 @@ class GameNotifier extends _$GameNotifier {
     final wasComplete = current.session.isComplete;
     final isCompleteNow = next.isComplete;
 
+    // Sons (#5) — best-effort, conditionnés à soundEnabled.
+    if (_soundEnabled) {
+      if (!wasComplete && isCompleteNow) {
+        _sound.win();
+      } else if (next.errorCount > current.session.errorCount) {
+        _sound.error();
+      }
+    }
+
     Duration? completedDuration = current.completedDuration;
     if (!wasComplete && isCompleteNow) {
       completedDuration = _runtime.totalElapsed;
@@ -332,6 +403,8 @@ class GameNotifier extends _$GameNotifier {
     if (current == null) return;
     if (current.ui.selectedIndex == index) return;
     state = current.copyWith(ui: current.ui.copyWith(selectedIndex: index));
+    // Son de tap (#5) sur une vraie sélection de case (pas sur désélection).
+    if (index != null && _soundEnabled) _sound.tap();
     // Pas de save : selectedIndex n'est pas persisté.
   }
 
@@ -381,6 +454,7 @@ class GameNotifier extends _$GameNotifier {
   void _disposeRuntime() {
     _saveTimer?.cancel();
     _runtime.stop();
+    _sound.dispose();
     // Pas de _flushSave ici : la page appelle flushSave() en dispose()
     // et didChangeAppLifecycleState. Faire un await dans onDispose est risqué.
   }

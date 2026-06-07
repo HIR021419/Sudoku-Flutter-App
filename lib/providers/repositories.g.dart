@@ -64,5 +64,41 @@ final statsRepositoryProvider = Provider<StatsRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef StatsRepositoryRef = ProviderRef<StatsRepository>;
+String _$dailyRepositoryHash() => r'486b542d2ccf5890bb500251e0522cbdaeb6d1c1';
+
+/// See also [dailyRepository].
+@ProviderFor(dailyRepository)
+final dailyRepositoryProvider = Provider<DailyRepository>.internal(
+  dailyRepository,
+  name: r'dailyRepositoryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$dailyRepositoryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DailyRepositoryRef = ProviderRef<DailyRepository>;
+String _$achievementsRepositoryHash() =>
+    r'2d1a734d77096813773c9ac2ae1e17dfdb27cdb2';
+
+/// See also [achievementsRepository].
+@ProviderFor(achievementsRepository)
+final achievementsRepositoryProvider =
+    Provider<AchievementsRepository>.internal(
+      achievementsRepository,
+      name: r'achievementsRepositoryProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$achievementsRepositoryHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AchievementsRepositoryRef = ProviderRef<AchievementsRepository>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

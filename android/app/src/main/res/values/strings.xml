@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Play Games Services (#2) — ID d'application Play Games (numérique),
+      depuis Play Console > Services Play Games > Configuration.
+    -->
+    <string name="game_services_project_id">798448036001</string>
+</resources>

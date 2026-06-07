@@ -33,6 +33,8 @@ class StatsNotifier extends _$StatsNotifier {
   }
 
   /// Enregistre une victoire — met à jour gamesSolved et bestTime si meilleur.
+  /// [time] est le **temps effectif** (brut + pénalités erreurs/indices, cf.
+  /// `GameSession.effectiveTime`) : c'est lui qui fait foi pour le record.
   Future<void> recordWin(DifficultyEnum difficulty, Duration time) async {
     final current = state.valueOrNull ?? Stats.empty();
     final next = current.withWin(difficulty, time);

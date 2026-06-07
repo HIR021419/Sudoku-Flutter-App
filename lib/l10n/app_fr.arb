@@ -27,7 +27,61 @@
   "winStatTime": "Temps",
   "winStatErrors": "Erreurs",
   "winStatHints": "Indices",
+  "winEffectiveTime": "Temps retenu : {time} (pénalités incluses)",
+  "@winEffectiveTime": {
+    "description": "Effective time including penalties shown on the win dialog",
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
   "winBackHome": "Retour à l'accueil",
+  "dailyTitle": "Défi du jour",
+  "dailyCardPlay": "Jouez la grille du jour",
+  "dailyCardWon": "Résolu en {time}",
+  "@dailyCardWon": {
+    "description": "Daily challenge solved, with effective time",
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "dailyCardComeBack": "Revenez demain pour une nouvelle grille",
+  "dailyAbandonTitle": "Abandonner le défi du jour ?",
+  "dailyAbandonMessage": "Vous n'avez qu'une tentative par jour : si vous quittez maintenant, le défi du jour sera perdu jusqu'à demain.",
+  "leaderboardsTitle": "Classements",
+  "achievementsTitle": "Succès",
+  "achievementsUnlockedSnack": "Succès débloqué : {names}",
+  "@achievementsUnlockedSnack": {
+    "description": "Snackbar shown when achievements are unlocked",
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "achFirstWinTitle": "Première victoire",
+  "achFirstWinDesc": "Résoudre votre première grille.",
+  "achNoMistakeTitle": "Sans faute",
+  "achNoMistakeDesc": "Gagner une partie sans aucune erreur.",
+  "achNoHintTitle": "Sans indice",
+  "achNoHintDesc": "Gagner une partie sans aucun indice.",
+  "achGames10Title": "10 parties",
+  "achGames10Desc": "Résoudre 10 grilles.",
+  "achGames50Title": "50 parties",
+  "achGames50Desc": "Résoudre 50 grilles.",
+  "achGames100Title": "100 parties",
+  "achGames100Desc": "Résoudre 100 grilles.",
+  "achAllDifficultiesTitle": "Touche-à-tout",
+  "achAllDifficultiesDesc": "Gagner dans les quatre difficultés.",
+  "achDailyFirstTitle": "Défi relevé",
+  "achDailyFirstDesc": "Résoudre un défi du jour.",
+  "achDailyStreak7Title": "Semaine parfaite",
+  "achDailyStreak7Desc": "Résoudre le défi du jour 7 jours d'affilée.",
+  "achFastEasyTitle": "Éclair (facile)",
+  "achFastEasyDesc": "Gagner une grille facile en moins de 10 min.",
+  "achFastMediumTitle": "Éclair (moyen)",
+  "achFastMediumDesc": "Gagner une grille moyenne en moins de 12 min.",
+  "achFastHardTitle": "Éclair (difficile)",
+  "achFastHardDesc": "Gagner une grille difficile en moins de 15 min.",
+  "achFastExpertTitle": "Éclair (expert)",
+  "achFastExpertDesc": "Gagner une grille expert en moins de 20 min.",
   "toolbarUndo": "Annuler",
   "toolbarErase": "Effacer",
   "toolbarNotes": "Notes",

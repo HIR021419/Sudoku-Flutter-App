@@ -13,6 +13,9 @@ typedef _TileVm = ({
   bool isSameValue,
   bool hasError,
   int notesMask,
+  // Chiffre mis en avant (activeNumber en fillMode, sinon valeur de la case
+  // sélectionnée) — sert à surligner les notes correspondantes (#8).
+  int? highlightedNumber,
 });
 
 int _notesToMask(Set<int> notes) {
@@ -44,6 +47,7 @@ class TileWidget extends ConsumerWidget {
             isSameValue: false,
             hasError: false,
             notesMask: 0,
+            highlightedNumber: null,
           );
         }
         final session = state.session;
@@ -79,6 +83,7 @@ class TileWidget extends ConsumerWidget {
           isSameValue: isSameValue,
           hasError: session.hasVisibleError(index),
           notesMask: _notesToMask(session.notesAt(index)),
+          highlightedNumber: (ref0 != null && ref0 != 0) ? ref0 : null,
         );
       }),
     );
@@ -145,7 +150,7 @@ class TileWidget extends ConsumerWidget {
     if (vm.notesMask != 0) {
       return KeyedSubtree(
         key: const ValueKey('notes'),
-        child: _buildNotes(vm.notesMask, colorScheme),
+        child: _buildNotes(vm.notesMask, vm.highlightedNumber, colorScheme),
       );
     }
     return const SizedBox.shrink(key: ValueKey('empty'));
@@ -177,7 +182,11 @@ class TileWidget extends ConsumerWidget {
     return parts.join(', ');
   }
 
-  Widget _buildNotes(int notesMask, ColorScheme colorScheme) {
+  Widget _buildNotes(
+    int notesMask,
+    int? highlightedNumber,
+    ColorScheme colorScheme,
+  ) {
     // ScrollConfiguration masque la scrollbar que Material affiche par défaut
     // sur les Scrollable (visible notamment sur desktop/web et après hover
     // souris) — la mini-grille de notes ne défile jamais (shrinkWrap +
@@ -193,6 +202,10 @@ class TileWidget extends ConsumerWidget {
         children: List.generate(9, (i) {
           final n = i + 1;
           final present = notesMask & (1 << i) != 0;
+          // #8 — note dont la valeur == chiffre mis en avant : on la souligne
+          // (couleur primaire + gras) pour repérer d'un coup d'œil les cases
+          // candidates au chiffre actif/sélectionné.
+          final highlighted = highlightedNumber != null && n == highlightedNumber;
           return Center(
             child: present
                 ? FittedBox(
@@ -200,9 +213,16 @@ class TileWidget extends ConsumerWidget {
                     child: Text(
                       n.toString(),
                       style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.onSurfaceVariant,
+                        // #7 — chiffres de note plus grands (FittedBox.scaleDown
+                        // borne au besoin sur les petites cellules).
+                        fontSize: 20,
+                        fontWeight: highlighted
+                            ? FontWeight.w800
+                            : FontWeight.w500,
+                        // #8 — couleur de surlignage demandée (#3990ED).
+                        color: highlighted
+                            ? const Color(0xFF3990ED)
+                            : colorScheme.onSurfaceVariant,
                       ),
                     ),
                   )

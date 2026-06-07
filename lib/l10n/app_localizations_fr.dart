@@ -55,7 +55,126 @@ class AppLocalizationsFr extends AppLocalizations {
   String get winStatHints => 'Indices';
 
   @override
+  String winEffectiveTime(String time) {
+    return 'Temps retenu : $time (pénalités incluses)';
+  }
+
+  @override
   String get winBackHome => 'Retour à l\'accueil';
+
+  @override
+  String get dailyTitle => 'Défi du jour';
+
+  @override
+  String get dailyCardPlay => 'Jouez la grille du jour';
+
+  @override
+  String dailyCardWon(String time) {
+    return 'Résolu en $time';
+  }
+
+  @override
+  String get dailyCardComeBack => 'Revenez demain pour une nouvelle grille';
+
+  @override
+  String get dailyAbandonTitle => 'Abandonner le défi du jour ?';
+
+  @override
+  String get dailyAbandonMessage =>
+      'Vous n\'avez qu\'une tentative par jour : si vous quittez maintenant, le défi du jour sera perdu jusqu\'à demain.';
+
+  @override
+  String get leaderboardsTitle => 'Classements';
+
+  @override
+  String get achievementsTitle => 'Succès';
+
+  @override
+  String achievementsUnlockedSnack(String names) {
+    return 'Succès débloqué : $names';
+  }
+
+  @override
+  String get achFirstWinTitle => 'Première victoire';
+
+  @override
+  String get achFirstWinDesc => 'Résoudre votre première grille.';
+
+  @override
+  String get achNoMistakeTitle => 'Sans faute';
+
+  @override
+  String get achNoMistakeDesc => 'Gagner une partie sans aucune erreur.';
+
+  @override
+  String get achNoHintTitle => 'Sans indice';
+
+  @override
+  String get achNoHintDesc => 'Gagner une partie sans aucun indice.';
+
+  @override
+  String get achGames10Title => '10 parties';
+
+  @override
+  String get achGames10Desc => 'Résoudre 10 grilles.';
+
+  @override
+  String get achGames50Title => '50 parties';
+
+  @override
+  String get achGames50Desc => 'Résoudre 50 grilles.';
+
+  @override
+  String get achGames100Title => '100 parties';
+
+  @override
+  String get achGames100Desc => 'Résoudre 100 grilles.';
+
+  @override
+  String get achAllDifficultiesTitle => 'Touche-à-tout';
+
+  @override
+  String get achAllDifficultiesDesc => 'Gagner dans les quatre difficultés.';
+
+  @override
+  String get achDailyFirstTitle => 'Défi relevé';
+
+  @override
+  String get achDailyFirstDesc => 'Résoudre un défi du jour.';
+
+  @override
+  String get achDailyStreak7Title => 'Semaine parfaite';
+
+  @override
+  String get achDailyStreak7Desc =>
+      'Résoudre le défi du jour 7 jours d\'affilée.';
+
+  @override
+  String get achFastEasyTitle => 'Éclair (facile)';
+
+  @override
+  String get achFastEasyDesc => 'Gagner une grille facile en moins de 10 min.';
+
+  @override
+  String get achFastMediumTitle => 'Éclair (moyen)';
+
+  @override
+  String get achFastMediumDesc =>
+      'Gagner une grille moyenne en moins de 12 min.';
+
+  @override
+  String get achFastHardTitle => 'Éclair (difficile)';
+
+  @override
+  String get achFastHardDesc =>
+      'Gagner une grille difficile en moins de 15 min.';
+
+  @override
+  String get achFastExpertTitle => 'Éclair (expert)';
+
+  @override
+  String get achFastExpertDesc =>
+      'Gagner une grille expert en moins de 20 min.';
 
   @override
   String get toolbarUndo => 'Annuler';

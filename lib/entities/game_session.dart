@@ -113,6 +113,27 @@ abstract class GameSession with _$GameSession {
   bool get canUndo => undoStack.isNotEmpty;
   bool get isFilled => !userGrid.contains(0);
 
+  // --- Scoring / anti-triche (#10) ---
+  //
+  // Le score d'une partie repose sur un **temps effectif** = temps brut +
+  // pénalités. C'est ce temps effectif qui sert au record (best time) et au
+  // classement, jamais le temps brut. Une partie « propre » (0 erreur, 0
+  // indice) a un temps effectif == temps brut.
+
+  /// Pénalité de temps ajoutée par erreur révélée.
+  static const Duration penaltyPerError = Duration(minutes: 2);
+
+  /// Pénalité de temps ajoutée par indice utilisé.
+  static const Duration penaltyPerHint = Duration(minutes: 1);
+
+  /// Total des pénalités (erreurs + indices).
+  Duration get timePenalty =>
+      penaltyPerError * errorCount + penaltyPerHint * hintsUsed;
+
+  /// Temps effectif retenu pour le record et le classement : temps brut de la
+  /// partie ([rawTime]) augmenté des [timePenalty].
+  Duration effectiveTime(Duration rawTime) => rawTime + timePenalty;
+
   int valueAt(int index) => userGrid[index];
   Set<int> notesAt(int index) => notes[index] ?? const {};
   bool isGiven(int index) => givens.contains(index);
@@ -162,11 +183,20 @@ abstract class GameSession with _$GameSession {
     final newUndoStack = _appendUndo(entry);
 
     final newUserGrid = List<int>.of(userGrid)..[index] = value;
-    final newNotes = _autoCleanNotes(
-      _removeNotesAt(notes, index),
-      index,
-      value,
-    );
+
+    // #9 — En autoCheck, on ne nettoie les notes (case courante + pairs) que si
+    // la valeur posée est correcte. Sur une erreur, on préserve TOUTES les
+    // notes : elles ne doivent pas être pénalisées par une saisie fausse et
+    // réapparaissent telles quelles si le joueur efface l'erreur. En modes
+    // `validate`/`noCheck`, la justesse n'est pas connue à la saisie → on
+    // conserve le nettoyage historique.
+    final bool isError =
+        validationMode == ValidationModeEnum.autoCheck &&
+        value != solution[index];
+    final Map<int, Set<int>> newNotes = isError
+        ? notes
+        : _autoCleanNotes(_removeNotesAt(notes, index), index, value);
+
     final newRevealed = Set<int>.of(revealedErrors)..remove(index);
     final newValidated = Set<int>.of(validatedCorrect)..remove(index);
     var newErrorCount = errorCount;

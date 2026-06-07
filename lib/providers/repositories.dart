@@ -1,4 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:sudoku/repositories/achievements_repository.dart';
+import 'package:sudoku/repositories/daily_repository.dart';
 import 'package:sudoku/repositories/game_repository.dart';
 import 'package:sudoku/repositories/settings_repository.dart';
 import 'package:sudoku/repositories/stats_repository.dart';
@@ -22,3 +24,11 @@ SettingsRepository settingsRepository(SettingsRepositoryRef ref) =>
 @Riverpod(keepAlive: true)
 StatsRepository statsRepository(StatsRepositoryRef ref) =>
     SharedPrefsStatsRepository();
+
+@Riverpod(keepAlive: true)
+DailyRepository dailyRepository(DailyRepositoryRef ref) =>
+    SharedPrefsDailyRepository();
+
+@Riverpod(keepAlive: true)
+AchievementsRepository achievementsRepository(AchievementsRepositoryRef ref) =>
+    SharedPrefsAchievementsRepository();

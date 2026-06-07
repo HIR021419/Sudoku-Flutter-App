@@ -16,7 +16,7 @@ if (hasKeystoreProperties) {
 }
 
 android {
-    namespace = "dev.yannl.sudoku"
+    namespace = "com.rtz_hiro.sudoku"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
 
@@ -30,7 +30,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "dev.yannl.sudoku"
+        applicationId = "com.rtz_hiro.sudoku"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

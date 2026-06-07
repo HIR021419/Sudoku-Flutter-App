@@ -14,7 +14,61 @@
   "winStatTime": "Time",
   "winStatErrors": "Errors",
   "winStatHints": "Hints",
+  "winEffectiveTime": "Final time: {time} (penalties included)",
+  "@winEffectiveTime": {
+    "description": "Effective time including penalties shown on the win dialog",
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
   "winBackHome": "Back to home",
+  "dailyTitle": "Daily challenge",
+  "dailyCardPlay": "Play today's grid",
+  "dailyCardWon": "Solved in {time}",
+  "@dailyCardWon": {
+    "description": "Daily challenge solved, with effective time",
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "dailyCardComeBack": "Come back tomorrow for a new grid",
+  "dailyAbandonTitle": "Abandon today's challenge?",
+  "dailyAbandonMessage": "You only get one attempt per day: if you leave now, today's challenge is lost until tomorrow.",
+  "leaderboardsTitle": "Leaderboards",
+  "achievementsTitle": "Achievements",
+  "achievementsUnlockedSnack": "Achievement unlocked: {names}",
+  "@achievementsUnlockedSnack": {
+    "description": "Snackbar shown when achievements are unlocked",
+    "placeholders": {
+      "names": { "type": "String" }
+    }
+  },
+  "achFirstWinTitle": "First win",
+  "achFirstWinDesc": "Solve your first grid.",
+  "achNoMistakeTitle": "Flawless",
+  "achNoMistakeDesc": "Win a game without any mistake.",
+  "achNoHintTitle": "No hints",
+  "achNoHintDesc": "Win a game without any hint.",
+  "achGames10Title": "10 games",
+  "achGames10Desc": "Solve 10 grids.",
+  "achGames50Title": "50 games",
+  "achGames50Desc": "Solve 50 grids.",
+  "achGames100Title": "100 games",
+  "achGames100Desc": "Solve 100 grids.",
+  "achAllDifficultiesTitle": "Jack of all",
+  "achAllDifficultiesDesc": "Win on all four difficulties.",
+  "achDailyFirstTitle": "Daily done",
+  "achDailyFirstDesc": "Solve a daily challenge.",
+  "achDailyStreak7Title": "Perfect week",
+  "achDailyStreak7Desc": "Solve the daily challenge 7 days in a row.",
+  "achFastEasyTitle": "Lightning (easy)",
+  "achFastEasyDesc": "Win an easy grid in under 10 min.",
+  "achFastMediumTitle": "Lightning (medium)",
+  "achFastMediumDesc": "Win a medium grid in under 12 min.",
+  "achFastHardTitle": "Lightning (hard)",
+  "achFastHardDesc": "Win a hard grid in under 15 min.",
+  "achFastExpertTitle": "Lightning (expert)",
+  "achFastExpertDesc": "Win an expert grid in under 20 min.",
   "toolbarUndo": "Undo",
   "toolbarErase": "Erase",
   "toolbarNotes": "Notes",

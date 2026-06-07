@@ -5,12 +5,16 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sudoku/entities/type/difficulty_enum.dart';
 import 'package:sudoku/l10n/app_localizations.dart';
 import 'package:sudoku/models/sudoku_page_init.dart';
+import 'package:sudoku/pages/achievements_page.dart';
 import 'package:sudoku/pages/settings_page.dart';
 import 'package:sudoku/pages/sudoku_page.dart';
 import 'package:sudoku/widgets/sudoku_dialogs.dart';
 import 'package:sudoku/providers/repositories.dart';
+import 'package:sudoku/services/play_games_service.dart';
+import 'package:sudoku/utils/daily_challenge.dart';
 import 'package:sudoku/utils/scroll_behaviors.dart';
 import 'package:sudoku/utils/sudoku_utils.dart';
+import 'package:sudoku/widgets/daily_card.dart';
 import 'package:sudoku/widgets/difficulty_selector_widget.dart';
 import 'package:sudoku/widgets/resume_game_card.dart';
 import 'package:sudoku/widgets/stats_card_widget.dart';
@@ -30,6 +34,12 @@ class HomePage extends HookConsumerWidget {
     final saved = useState<Map<String, dynamic>?>(initialSaved);
     final navigating = useState(false);
     final generating = useState(false);
+
+    // Connexion Play Games silencieuse au démarrage (best-effort, #2).
+    useEffect(() {
+      ref.read(playGamesServiceProvider).trySilentSignIn();
+      return null;
+    }, const []);
 
     Future<void> pushSudokuPage(SudokuPageInit init) async {
       if (navigating.value) return;
@@ -83,10 +93,38 @@ class HomePage extends HookConsumerWidget {
       }
     }
 
+    Future<void> onPlayDaily() async {
+      if (navigating.value || generating.value) return;
+      generating.value = true;
+      try {
+        // Grille déterministe du jour (UTC) — identique pour tous les joueurs.
+        final seed = dailySeed(DateTime.now());
+        final puzzle = await compute(
+          generateSeededPuzzleData,
+          (dailyDifficulty, seed),
+        );
+        if (!context.mounted) return;
+        // Pas de verrou au lancement : il est posé seulement à la victoire ou
+        // sur abandon explicite (cf. SudokuPage). Le défi ne touche pas le
+        // slot de sauvegarde normal (pas de reprise).
+        await pushSudokuPage(
+          DailyGameInit(solution: puzzle.solution, givens: puzzle.givens),
+        );
+      } finally {
+        if (context.mounted) generating.value = false;
+      }
+    }
+
     void openSettings() {
       Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (_) => const SettingsPage()));
+    }
+
+    void openAchievements() {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const AchievementsPage()));
     }
 
     return Scaffold(
@@ -145,12 +183,27 @@ class HomePage extends HookConsumerWidget {
                           ),
                           const SizedBox(height: 24),
                         ],
+                        DailyCard(
+                          onPlay: onPlayDaily,
+                          isLoading: generating.value,
+                        ),
+                        const SizedBox(height: 16),
                         DifficultySelectorWidget(
                           onPlay: onPlay,
                           isLoading: generating.value,
                         ),
                         const SizedBox(height: 24),
                         const StatsCardWidget(),
+                        const SizedBox(height: 12),
+                        TextButton.icon(
+                          onPressed: () => ref
+                              .read(playGamesServiceProvider)
+                              .showLeaderboards(),
+                          icon: const Icon(Icons.leaderboard_outlined),
+                          label: Text(
+                            AppLocalizations.of(context).leaderboardsTitle,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -168,6 +221,20 @@ class HomePage extends HookConsumerWidget {
                   padding: const EdgeInsets.all(10),
                   icon: const Icon(Icons.settings_outlined),
                   onPressed: openSettings,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Material(
+                color: Colors.transparent,
+                child: IconButton(
+                  tooltip: AppLocalizations.of(context).achievementsTitle,
+                  iconSize: 30,
+                  padding: const EdgeInsets.all(10),
+                  icon: const Icon(Icons.emoji_events_outlined),
+                  onPressed: openAchievements,
                 ),
               ),
             ),
