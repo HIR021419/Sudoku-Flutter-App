@@ -6,29 +6,9 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
-  # Bouton "Run workflow" dans l'onglet Actions.
-  #
-  # Usages prévus :
-  #   - APK signé (sideload / tests internes hors Play Store) → build_apk=true
-  #   - AAB signé hors-tag (ex: récupérer le premier bundle avant d'avoir
-  #     mis en place le versioning Play Store) → build_aab=true
-  workflow_dispatch:
-    inputs:
-      build_apk:
-        description: 'Build APK signé (sideload)'
-        type: boolean
-        default: true
-      build_aab:
-        description: 'Build AAB signé (App Bundle Play Store)'
-        type: boolean
-        default: false
-      version_suffix:
-        description: 'Suffixe des artifacts (ex: dev, test)'
-        required: false
-        default: 'manual'
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FLUTTER_VERSION: '3.41.9'
 
 jobs:
   # Toutes les pushes/PR : analyze + test
@@ -39,14 +19,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: ./.github/actions/setup-flutter
         with:
-          channel: stable
-          flutter-version: '3.41.9'
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
+          flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed lib test
@@ -60,7 +35,7 @@ jobs:
 
   # Sur push main ou tag v* : build + déploiement web sur GitHub Pages
   #
-  # Prérequis (une fois) : Settings → Pages → Source → "GitHub Actions"
+  # Prérequis (une fois) : Settings -> Pages -> Source -> "GitHub Actions"
   deploy-web:
     name: Deploy Flutter web to GitHub Pages
     needs: analyze-and-test
@@ -76,14 +51,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: ./.github/actions/setup-flutter
         with:
-          channel: stable
-          flutter-version: '3.41.9'
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
+          flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Build web release
         run: flutter build web --release --base-href /Sudoku-Flutter-App/
@@ -96,174 +66,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-  # ─────────────────────────────────────────────────────────────────────────
-  # Secrets requis pour signer APK et AAB
-  # Settings → Secrets and variables → Actions → New repository secret
-  #
-  #   KEYSTORE_BASE64    base64 du fichier upload-keystore.jks
-  #                      Génération : keytool -genkey -v -keystore upload-keystore.jks \
-  #                                     -alias upload -keyalg RSA -keysize 2048 -validity 10000
-  #                      Encodage  : base64 -w 0 upload-keystore.jks > keystore.txt
-  #
-  #   KEYSTORE_PASSWORD  mot de passe du store
-  #   KEY_PASSWORD       mot de passe de la clé (peut être identique au store)
-  #   KEY_ALIAS          alias (ex: upload)
-  # ─────────────────────────────────────────────────────────────────────────
-
-  # APK signé : uniquement déclenché manuellement depuis l'onglet Actions.
-  # Sert au sideload (tests internes, distribution directe). N'est PAS créé
-  # automatiquement sur tag — le tag déclenche le AAB pour Play Store.
-  build-signed-apk:
-    name: Build signed release APK (manual)
-    needs: analyze-and-test
-    if: github.event_name == 'workflow_dispatch' && inputs.build_apk
-    runs-on: ubuntu-latest
-    env:
-      APK_NAME: sudoku-${{ inputs.version_suffix }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: '3.41.9'
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Decode keystore from secret
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::error::KEYSTORE_BASE64 secret is empty or missing"
-            exit 1
-          fi
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
-          ls -la android/app/upload-keystore.jks
-
-      - name: Write key.properties
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        run: |
-          cat > android/key.properties << EOF
-          storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
-          storeFile=upload-keystore.jks
-          EOF
-
-      - name: Build release APK
-        run: flutter build apk --release
-
-      - name: Rename APK with version
-        run: |
-          mv build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/${{ env.APK_NAME }}.apk
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.APK_NAME }}-apk
-          path: build/app/outputs/flutter-apk/${{ env.APK_NAME }}.apk
-          if-no-files-found: error
-
-  # AAB signé : déclenché sur tag v* (release Play Store) ou manuellement
-  # via workflow_dispatch (build_aab=true) — utile pour récupérer le tout
-  # premier bundle avant d'avoir mis en place le versioning Play Store.
-  #
-  # TODO (étape suivante) : ajouter un job de publication automatique sur
-  # le track "internal" Play Store via r0adkll/upload-google-play-action,
-  # une fois le service account Play Console configuré.
-  build-signed-aab:
-    name: Build signed release AAB
-    needs: analyze-and-test
-    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.build_aab)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # nécessaire pour créer la GitHub Release sur tag
-    env:
-      # Tag v* → nom du tag (ex: v1.2.0)
-      # workflow_dispatch → suffixe choisi par l'utilisateur
-      AAB_NAME: sudoku-${{ github.event_name == 'workflow_dispatch' && inputs.version_suffix || github.ref_name }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: '3.41.9'
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Decode keystore from secret
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::error::KEYSTORE_BASE64 secret is empty or missing"
-            exit 1
-          fi
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
-          ls -la android/app/upload-keystore.jks
-
-      - name: Write key.properties
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        run: |
-          cat > android/key.properties << EOF
-          storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
-          storeFile=upload-keystore.jks
-          EOF
-
-      - name: Build release AAB
-        run: flutter build appbundle --release
-
-      - name: Rename AAB with version
-        run: |
-          mv build/app/outputs/bundle/release/app-release.aab \
-             build/app/outputs/bundle/release/${{ env.AAB_NAME }}.aab
-
-      - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.AAB_NAME }}-aab
-          path: build/app/outputs/bundle/release/${{ env.AAB_NAME }}.aab
-          if-no-files-found: error
-
-      # GitHub Release uniquement sur tag v*. L'AAB est attaché à la Release
-      # à titre d'archive — l'install se fait via Play Console, pas en direct.
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: build/app/outputs/bundle/release/${{ env.AAB_NAME }}.aab
-          generate_release_notes: true
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

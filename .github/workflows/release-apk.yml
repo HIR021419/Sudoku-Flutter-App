@@ -1,0 +1,81 @@
+name: Release APK
+
+# Build manuel d'un APK signé pour sideload / tests internes.
+# Déclencher depuis l'onglet Actions → Release APK → Run workflow.
+#
+# Secrets requis (Settings → Secrets and variables → Actions) :
+#   KEYSTORE_BASE64    base64 du fichier upload-keystore.jks
+#   KEYSTORE_PASSWORD  mot de passe du store
+#   KEY_PASSWORD       mot de passe de la clé
+#   KEY_ALIAS          alias (ex: upload)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_suffix:
+        description: 'Suffixe du nom de l''artifact (ex: dev, test, v1.2.0)'
+        required: false
+        default: 'manual'
+
+env:
+  FLUTTER_VERSION: '3.41.9'
+
+jobs:
+  analyze-and-test:
+    name: Analyze & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: ./.github/actions/setup-flutter
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+        continue-on-error: true
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+  build-signed-apk:
+    name: Build signed release APK
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    env:
+      APK_NAME: sudoku-${{ inputs.version_suffix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter (Java + Gradle cache inclus)
+        uses: ./.github/actions/setup-flutter
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          setup-java: 'true'
+
+      - name: Setup Android signing
+        uses: ./.github/actions/setup-android-signing
+        with:
+          keystore-base64: ${{ secrets.KEYSTORE_BASE64 }}
+          keystore-password: ${{ secrets.KEYSTORE_PASSWORD }}
+          key-password: ${{ secrets.KEY_PASSWORD }}
+          key-alias: ${{ secrets.KEY_ALIAS }}
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Rename APK with version
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/${{ env.APK_NAME }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}-apk
+          path: build/app/outputs/flutter-apk/${{ env.APK_NAME }}.apk
+          if-no-files-found: error

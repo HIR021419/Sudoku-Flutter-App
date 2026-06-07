@@ -1,0 +1,45 @@
+name: Setup Android signing
+description: >
+  Décode le keystore depuis un secret base64 et écrit android/key.properties.
+  Secrets requis dans le repo :
+    KEYSTORE_BASE64    — base64 du fichier upload-keystore.jks
+    KEYSTORE_PASSWORD  — mot de passe du store
+    KEY_PASSWORD       — mot de passe de la clé
+    KEY_ALIAS          — alias (ex: upload)
+
+inputs:
+  keystore-base64:
+    description: 'Contenu base64 du keystore JKS'
+    required: true
+  keystore-password:
+    description: 'Mot de passe du keystore'
+    required: true
+  key-password:
+    description: 'Mot de passe de la clé'
+    required: true
+  key-alias:
+    description: 'Alias de la clé'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Decode keystore
+      shell: bash
+      run: |
+        if [ -z "${{ inputs.keystore-base64 }}" ]; then
+          echo "::error::KEYSTORE_BASE64 secret is empty or missing"
+          exit 1
+        fi
+        echo "${{ inputs.keystore-base64 }}" | base64 -d > android/app/upload-keystore.jks
+        ls -la android/app/upload-keystore.jks
+
+    - name: Write key.properties
+      shell: bash
+      run: |
+        {
+          echo "storePassword=${{ inputs.keystore-password }}"
+          echo "keyPassword=${{ inputs.key-password }}"
+          echo "keyAlias=${{ inputs.key-alias }}"
+          echo "storeFile=upload-keystore.jks"
+        } > android/key.properties

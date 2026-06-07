@@ -1,0 +1,42 @@
+name: Setup Flutter environment
+description: >
+  Configure Java (optionnel), le cache Gradle, Flutter et installe les dépendances pub.
+
+inputs:
+  flutter-version:
+    description: 'Version Flutter à utiliser'
+    required: true
+  setup-java:
+    description: 'Configurer Java 17 + cache Gradle (requis pour les builds Android)'
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Java
+      if: ${{ inputs.setup-java == 'true' }}
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Cache Gradle
+      if: ${{ inputs.setup-java == 'true' }}
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: ${{ runner.os }}-gradle-
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ inputs.flutter-version }}
+        channel: stable
+        cache: true
+
+    - name: Install dependencies
+      shell: bash
+      run: flutter pub get
