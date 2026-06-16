@@ -41,6 +41,12 @@ flutter test
 
 Les réglages, statistiques et sauvegardes de partie sont stockés localement via `SharedPreferences`.
 
-## Release
+## Licence
 
-La procédure de publication est documentée dans [docs/RELEASE.md](docs/RELEASE.md).
+Ce projet est distribué sous **PolyForm Noncommercial License 1.0.0** — voir [`LICENSE.md`](LICENSE.md).
+
+Le code source est public : tu peux le lire, l'étudier, le modifier et le redistribuer **à des fins non commerciales** (usage personnel, projets amateurs, recherche, enseignement, organisations à but non lucratif…).
+
+**Tout usage commercial est interdit.** Cela inclut notamment la republication de l'application — modifiée ou non — sur un store avec de la publicité, des achats intégrés ou tout autre but lucratif, sans autorisation écrite de l'auteur.
+
+> ⚠️ Ce n'est pas une licence « open source » au sens de l'OSI (qui imposerait d'autoriser l'usage commercial). C'est une licence **source-available non commerciale**, choisie pour garder l'app gratuite et sans pub.
