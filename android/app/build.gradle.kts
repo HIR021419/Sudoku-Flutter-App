@@ -25,6 +25,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Aligne la cible JVM de Kotlin sur celle de Java (17). Sans cela, le
+    // nouveau Kotlin Gradle Plugin (apporté par games_services/audioplayers)
+    // compile en 21 → « Inconsistent JVM-target compatibility ».
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
     defaultConfig {
         applicationId = "com.rtz_hiro.sudoku"
         minSdk = flutter.minSdkVersion
