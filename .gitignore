@@ -58,4 +58,4 @@ client_secret*.json
 google-services.json
 GoogleService-Info.plist
 
-docs/
+AGENT/
